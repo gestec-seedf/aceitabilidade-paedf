@@ -156,7 +156,7 @@
         <li><b>Lei 11.947/2009</b> — alimentação escolar dos alunos da educação básica.</li>
         <li><b>Resolução FNDE 38/2009</b></li>
         <li><b>Resolução FNDE 26/2013</b></li>
-        <li><b>Resolução FNDE 06/2020</b></li>
+        <li><b>Resolução FNDE 04/2025</b></li>
         <li><b>Nota Técnica 3/2022 — SEE/DIAE/GPAE</b> — padroniza, no DF, amostra, frequência, seleção de preparações e resultados consolidados.</li>
       </ul>
       <h3>Métodos de análise sensorial</h3>
@@ -410,7 +410,12 @@
 
     <section class="view" id="calc-resto" data-title="Calc · Resto-Ingestão" hidden>
       <h2>Calculadora — Resto-Ingestão</h2>
-      <p>Informe os pesos. <b>% aceitação = 100 − (resto ÷ distribuído × 100)</b>. Aceita quando ≥ 90%.</p>
+      <p>Informe os pesos abaixo.</p>
+      <div class="formula">
+        <b>% rejeição</b> = (peso do resto ÷ peso distribuído) × 100<br />
+        <b>% aceitação</b> = 100 − % rejeição<br />
+        <span class="ok">Aceita quando ≥ 90%</span>
+      </div>
       <form class="calc" id="formResto">
         <label>Peso distribuído (g ou kg) <input type="number" min="0" step="0.01" name="dist" placeholder="ex.: 12000" /></label>
         <label>Peso do resto (mesma unidade) <input type="number" min="0" step="0.01" name="resto" placeholder="ex.: 900" /></label>
@@ -438,7 +443,7 @@
 
     <section class="view" id="calc-amostra" data-title="Calc · Amostra" hidden>
       <h2>Calculadora — Tamanho da Amostra</h2>
-      <p>Estimativa baseada na NT 3/2022 (DF). A amostra deve ficar entre <b>100 e 500</b> estudantes, estratificada por Programa de Trabalho. Selecione a escola com pelo menos <b>+20%</b> sobre o mínimo necessário.</p>
+      <p>Estimativa baseada na NT 3/2022 (DF). A amostra deve ficar entre <b>100 e 500</b> estudantes, distribuída proporcionalmente conforme o programa de trabalho. Selecione a escola com pelo menos <b>+20%</b> sobre o mínimo necessário.</p>
       <form class="calc" id="formAmostra">
         <label>Total de matriculados (universo) <input type="number" min="1" step="1" name="N" placeholder="ex.: 800" /></label>
         <label>Margem de erro (%) <input type="number" min="1" max="10" step="0.5" name="e" value="5" /></label>
