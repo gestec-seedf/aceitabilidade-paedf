@@ -417,20 +417,51 @@ main { max-width: 720px; margin: 0 auto; padding: .9rem .8rem 1.5rem; }
   display: grid; gap: .4rem;
 }
 .hf {
-  display: grid; grid-template-columns: 38px 1fr 90px; align-items: center; gap: .55rem;
+  display: grid;
+  grid-template-columns: 44px minmax(0,1fr) 96px;
+  align-items: center; gap: .6rem;
   background: var(--bg); border: 1px solid var(--line);
-  border-radius: 10px; padding: .45rem .6rem;
+  border-radius: 10px; padding: .5rem .65rem;
+  min-height: 52px;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", "Segoe UI", Roboto, sans-serif;
 }
-.hf .face { font-size: 1.5rem; text-align: center; line-height: 1; }
-.hf__t { font-size: .95rem; }
+.hf .face {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px;
+  font-size: 1.55rem; line-height: 1;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+  flex-shrink: 0;
+}
+.hf__t {
+  font-size: .98rem; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .hf input {
-  text-align: right; font-size: 1.05rem; font-weight: 600;
+  text-align: right; font-size: 1.05rem; font-weight: 700;
   border: 1px solid var(--line); border-radius: 8px;
-  padding: .45rem .55rem; background: var(--card); color: var(--text);
-  width: 100%;
+  padding: .5rem .55rem; background: var(--card); color: var(--text);
+  width: 100%; height: 42px;
+  -moz-appearance: textfield;
 }
+.hf input::-webkit-outer-spin-button,
+.hf input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .hf--ok { background: var(--green-3); border-color: var(--green); }
 [data-theme="dark"] .hf--ok { background: #0c2c1d; }
+.hf.is-disabled { opacity: .55; }
+.hf.is-disabled input { background: var(--line); cursor: not-allowed; }
+
+.hf__hint {
+  font-size: .82rem; color: var(--muted); margin: .2rem 0 .5rem;
+}
+.hf__warn {
+  margin: .55rem 0 0;
+  padding: .55rem .7rem;
+  border-radius: 8px;
+  background: #fff3e0; color: #92400e;
+  border-left: 3px solid var(--warn);
+  font-size: .85rem; font-weight: 500;
+}
+[data-theme="dark"] .hf__warn { background: #3b2a14; color: #fbbf24; }
 
 .turma__resumo:not(:empty) {
   margin-top: .6rem; padding-top: .55rem;

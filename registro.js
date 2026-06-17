@@ -27,6 +27,14 @@
     return { txt: 'Muito baixa', cls: 'rank--mb' };
   }
 
+  // média das adesões de cada turma (considera apenas turmas com presentes > 0)
+  function adesaoMediaTurmas(turmas) {
+    const valid = turmas.filter(t => t.pres > 0);
+    if (valid.length === 0) return { media: 0, qtd: 0 };
+    const soma = valid.reduce((acc, t) => acc + calcTurma(t).adesao, 0);
+    return { media: soma / valid.length, qtd: valid.length };
+  }
+
   function readTurma(el) {
     const get = sel => el.querySelector(sel);
     const getN = name => int(get(`[data-f="${name}"]`).value);
@@ -71,6 +79,55 @@
     `;
   }
 
+  const HED_FIELDS = ['adorei','gostei','indif','naogostei','detestei'];
+
+  function enforceMax(node, changedField) {
+    const presInput = node.querySelector('[data-f="pres"]');
+    const pres = int(presInput.value);
+    const inputs = HED_FIELDS.map(f => node.querySelector(`[data-f="${f}"]`));
+    const values = inputs.map(i => int(i.value));
+    const sum = values.reduce((a, b) => a + b, 0);
+    const warnBox = node.querySelector('[data-warn]');
+
+    // sem presentes informados → desabilita escala
+    inputs.forEach(i => {
+      const lbl = i.closest('.hf');
+      if (pres <= 0) lbl.classList.add('is-disabled'); else lbl.classList.remove('is-disabled');
+    });
+    if (pres <= 0) {
+      warnBox.hidden = false;
+      warnBox.textContent = '⚠️ Informe primeiro o número de presentes para liberar a escala hedônica.';
+      return;
+    }
+
+    // soma ultrapassou → reduz o campo recém-alterado (ou o último não-zero)
+    if (sum > pres) {
+      const idx = changedField ? HED_FIELDS.indexOf(changedField) : -1;
+      const excess = sum - pres;
+      if (idx >= 0) {
+        const novo = Math.max(0, values[idx] - excess);
+        inputs[idx].value = novo;
+      }
+      warnBox.hidden = false;
+      const total = inputs.map(i => int(i.value)).reduce((a, b) => a + b, 0);
+      warnBox.textContent = `⚠️ A soma das respostas (${total + excess}) ultrapassou o número de presentes (${pres}). O valor foi limitado em ${pres}.`;
+      return;
+    }
+
+    // perto do limite → aviso suave
+    const restante = pres - sum;
+    if (restante === 0) {
+      warnBox.hidden = false;
+      warnBox.textContent = `✅ Todos os ${pres} presentes foram contabilizados.`;
+      warnBox.style.background = ''; warnBox.style.color = ''; warnBox.style.borderLeftColor = '';
+    } else if (restante <= 5) {
+      warnBox.hidden = false;
+      warnBox.textContent = `Restam ${restante} presente(s) para contabilizar.`;
+    } else {
+      warnBox.hidden = true;
+    }
+  }
+
   function addTurma(data) {
     const node = tmpl.content.firstElementChild.cloneNode(true);
     list.appendChild(node);
@@ -78,11 +135,18 @@
     node.querySelector('.turma__del').addEventListener('click', () => {
       if (confirm('Remover esta turma?')) { node.remove(); refreshAll(); saveDraft(); }
     });
+    // detecta qual campo foi alterado para aplicar o cap
+    HED_FIELDS.forEach(f => {
+      const inp = node.querySelector(`[data-f="${f}"]`);
+      inp.addEventListener('input', () => enforceMax(node, f));
+    });
+    node.querySelector('[data-f="pres"]').addEventListener('input', () => enforceMax(node));
     node.addEventListener('input', () => {
       renderTurmaResumo(node, readTurma(node));
       renderResumo();
       saveDraftDebounced();
     });
+    enforceMax(node);
     renderTurmaResumo(node, readTurma(node));
     return node;
   }
@@ -114,11 +178,11 @@
       resumoBox.innerHTML = '<p class="muted">Adicione uma turma e preencha os dados para ver o resumo.</p>';
       return;
     }
-    const adesao = pct(tot.pres, tot.matric);
-    const adesaoParticipantes = pct(tot.partic, tot.pres);
+    const adM = adesaoMediaTurmas(turmas);
+    const adesaoMedia = adM.media;
     const aceitos = tot.adorei + tot.gostei;
     const aceitacao = pct(aceitos, tot.partic);
-    const ad = classifyAdesao(adesaoParticipantes);
+    const ad = classifyAdesao(adesaoMedia);
     const passou = aceitacao >= 85;
 
     resumoBox.innerHTML = `
@@ -133,8 +197,8 @@
         <div><b>${tot.partic}</b><span>participantes</span></div>
       </div>
       <div class="resumo__rank rank ${ad.cls}">
-        <span>Índice de adesão (participantes/presentes)</span>
-        <b>${fmt(adesaoParticipantes)} · ${ad.txt}</b>
+        <span>Índice de adesão (média de ${adM.qtd} turma${adM.qtd === 1 ? '' : 's'})</span>
+        <b>${fmt(adesaoMedia)} · ${ad.txt}</b>
       </div>
       <table class="resumo__tbl">
         <thead><tr><th>Escala Hedônica</th><th>N</th><th>%</th></tr></thead>
@@ -210,8 +274,8 @@
     }, {matric:0,pres:0,partic:0,adorei:0,gostei:0,indif:0,naogostei:0,detestei:0});
     const aceitos = tot.adorei + tot.gostei;
     const aceitacao = pct(aceitos, tot.partic);
-    const adesaoP = pct(tot.partic, tot.pres);
-    const ad = classifyAdesao(adesaoP);
+    const adM = adesaoMediaTurmas(turmas);
+    const ad = classifyAdesao(adM.media);
     const passou = aceitacao >= 85;
     const lines = [
       `TESTE DE ACEITABILIDADE — Resultados`,
@@ -235,7 +299,7 @@
       `Aceitação (Adorei + Gostei): ${aceitos} de ${tot.partic} = ${fmt(aceitacao)}`,
       `${passou ? '✅ ACEITA (≥ 85%)' : '❌ NÃO ACEITA (< 85%)'}`,
       ``,
-      `Índice de adesão (participantes/presentes): ${fmt(adesaoP)} — ${ad.txt}`
+      `Índice de adesão (média de ${adM.qtd} turma${adM.qtd === 1 ? '' : 's'}): ${fmt(adM.media)} — ${ad.txt}`
     ];
     return lines.join('\n');
   }
@@ -387,15 +451,15 @@
     XLSX.utils.book_append_sheet(wb, ws3, '% Aceitação - Total');
 
     // --- Aba 4: Índice de Adesão - Total ---
-    const adesaoP = pct(tot.partic, tot.pres);
-    const ad = classifyAdesao(adesaoP);
+    const adMxl = adesaoMediaTurmas(turmas);
+    const ad = classifyAdesao(adMxl.media);
     const aoa4 = [
       [`REGIONAL DE ENSINO: ${header.regional || ''}`],
       [`ESCOLA: ${header.escola || ''}`],
       [`PROGRAMA/MODALIDADE: ${header.programa || ''}`],
       [],
-      ['Programa/Modalidade','Total Matriculados','Total Presentes','Total Participantes','% Índice de Adesão'],
-      [header.programa || '', tot.matric, tot.pres, tot.partic, +adesaoP.toFixed(1)],
+      ['Programa/Modalidade','Total Matriculados','Total Presentes','Total Participantes',`% Índice de Adesão (média de ${adMxl.qtd} turma${adMxl.qtd === 1 ? '' : 's'})`],
+      [header.programa || '', tot.matric, tot.pres, tot.partic, +adMxl.media.toFixed(1)],
       [],
       ['CLASSIFICAÇÃO', ad.txt],
       [],
@@ -425,8 +489,8 @@
     }, {matric:0,pres:0,partic:0,adorei:0,gostei:0,indif:0,naogostei:0,detestei:0});
     const aceitos = tot.adorei + tot.gostei;
     const aceitacao = pct(aceitos, tot.partic);
-    const adesaoP = pct(tot.partic, tot.pres);
-    const ad = classifyAdesao(adesaoP);
+    const adMpdf = adesaoMediaTurmas(turmas);
+    const ad = classifyAdesao(adMpdf.media);
     const passou = aceitacao >= 85;
 
     const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><title>Teste de Aceitabilidade</title>
@@ -503,8 +567,8 @@
       </table>
 
       <h2>Índice de Adesão</h2>
-      <p><b>${fmt(adesaoP)}</b> — Classificação: <b>${ad.txt}</b><br/>
-      <small>(Muito baixa &lt;30 · Baixa 30–50 · Média 50–70 · Alta &gt;70)</small></p>
+      <p><b>${fmt(adMpdf.media)}</b> — Classificação: <b>${ad.txt}</b><br/>
+      <small>(Média das adesões de ${adMpdf.qtd} turma${adMpdf.qtd === 1 ? '' : 's'} · Muito baixa &lt;30 · Baixa 30–50 · Média 50–70 · Alta &gt;70)</small></p>
 
       <p class="meta">Gerado pelo app Aceitabilidade · PAE-DF · ${new Date().toLocaleString('pt-BR')}<br/>
       Boletim Alimentação · 24ª ed · DIAE/SEE-DF</p>

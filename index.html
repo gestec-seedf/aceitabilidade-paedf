@@ -533,13 +533,15 @@
             <label class="field"><span>Presentes</span><input type="number" min="0" step="1" data-f="pres" /></label>
           </div>
           <h4>Escala Hedônica</h4>
+          <p class="hf__hint">Preencha a contagem de fichas em cada categoria. A soma não pode ultrapassar o número de <b>presentes</b>.</p>
           <div class="hedonic-form">
-            <label class="hf hf--ok"><span class="face">😍</span><span class="hf__t">Adorei</span><input type="number" min="0" step="1" data-f="adorei" value="0" /></label>
-            <label class="hf hf--ok"><span class="face">🙂</span><span class="hf__t">Gostei</span><input type="number" min="0" step="1" data-f="gostei" value="0" /></label>
-            <label class="hf"><span class="face">😐</span><span class="hf__t">Indiferente</span><input type="number" min="0" step="1" data-f="indif" value="0" /></label>
-            <label class="hf"><span class="face">🙁</span><span class="hf__t">Não gostei</span><input type="number" min="0" step="1" data-f="naogostei" value="0" /></label>
-            <label class="hf"><span class="face">😖</span><span class="hf__t">Detestei</span><input type="number" min="0" step="1" data-f="detestei" value="0" /></label>
+            <label class="hf hf--ok"><span class="face">😍</span><span class="hf__t">Adorei</span><input type="number" min="0" step="1" inputmode="numeric" data-f="adorei" value="0" /></label>
+            <label class="hf hf--ok"><span class="face">🙂</span><span class="hf__t">Gostei</span><input type="number" min="0" step="1" inputmode="numeric" data-f="gostei" value="0" /></label>
+            <label class="hf"><span class="face">😐</span><span class="hf__t">Indiferente</span><input type="number" min="0" step="1" inputmode="numeric" data-f="indif" value="0" /></label>
+            <label class="hf"><span class="face">🙁</span><span class="hf__t">Não gostei</span><input type="number" min="0" step="1" inputmode="numeric" data-f="naogostei" value="0" /></label>
+            <label class="hf"><span class="face">😖</span><span class="hf__t">Detestei</span><input type="number" min="0" step="1" inputmode="numeric" data-f="detestei" value="0" /></label>
           </div>
+          <p class="hf__warn" data-warn hidden></p>
           <div class="turma__resumo" data-turma-resumo></div>
         </div>
       </div>
