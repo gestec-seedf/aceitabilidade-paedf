@@ -97,6 +97,15 @@
         </a>
       </div>
 
+      <h2 class="section-h">Registro do teste</h2>
+      <div class="cards">
+        <a class="card card--magenta card--wide" href="#" data-view="registro" style="grid-column: span 2">
+          <div class="card__icon">📝</div>
+          <div class="card__t">Planilha de Resultados</div>
+          <div class="card__s">Preencher e exportar (XLSX, PDF, CSV)</div>
+        </a>
+      </div>
+
       <h2 class="section-h">Calculadoras</h2>
       <div class="cards cards--calc">
         <a class="card card--accent" href="#" data-view="calc-aceitacao">
@@ -476,6 +485,66 @@
       </form>
     </section>
 
+    <!-- REGISTRO -->
+    <section class="view" id="registro" data-title="Planilha de Resultados" hidden>
+      <h2>Registro de Resultados do Teste</h2>
+      <p>Preencha os dados do teste. O app calcula tudo automaticamente e exporta nos formatos abaixo. O rascunho é salvo no celular automaticamente.</p>
+
+      <h3>Cabeçalho</h3>
+      <form class="form-grid" id="formCabecalho" autocomplete="off">
+        <label class="field"><span>Regional de Ensino</span><input type="text" name="regional" placeholder="ex.: Plano Piloto" /></label>
+        <label class="field"><span>Escola</span><input type="text" name="escola" placeholder="ex.: CEM 01 do Guará" /></label>
+        <label class="field"><span>Programa / Modalidade</span><input type="text" name="programa" placeholder="ex.: Ensino Médio" /></label>
+        <label class="field"><span>Preparação testada</span><input type="text" name="preparacao" placeholder="ex.: Pamonha doce" /></label>
+        <label class="field"><span>Data do teste</span><input type="date" name="data" /></label>
+        <label class="field"><span>Aplicador(es)</span><input type="text" name="aplicador" placeholder="ex.: Maria, João" /></label>
+      </form>
+
+      <h3 style="display:flex; align-items:center; justify-content:space-between;">
+        <span>Turmas</span>
+        <button type="button" id="addTurma" class="btn btn--small">+ Adicionar turma</button>
+      </h3>
+      <div id="turmasList"></div>
+
+      <h3>Resumo consolidado</h3>
+      <div id="resumo" class="resumo"></div>
+
+      <h3>Ações</h3>
+      <div class="actions">
+        <button type="button" class="btn" id="exportXlsx">📊 Excel (.xlsx)</button>
+        <button type="button" class="btn" id="exportPdf">📄 PDF / Imprimir</button>
+        <button type="button" class="btn" id="exportCsv">📋 CSV</button>
+        <button type="button" class="btn btn--ghost" id="copyResumo">📌 Copiar resumo</button>
+        <button type="button" class="btn btn--ghost" id="clearAll">🗑️ Limpar tudo</button>
+      </div>
+      <div id="actionMsg" class="meta" style="margin-top:.5rem; min-height:1rem;"></div>
+    </section>
+
+    <!-- Template de turma (não renderizado, clonado pelo JS) -->
+    <template id="tmplTurma">
+      <div class="turma" data-turma>
+        <div class="turma__head">
+          <input type="text" class="turma__nome" placeholder="Nome da turma (ex.: 6º A)" />
+          <button type="button" class="turma__del" aria-label="Remover turma">✕</button>
+        </div>
+        <div class="turma__body">
+          <div class="grid2">
+            <label class="field"><span>Matriculados</span><input type="number" min="0" step="1" data-f="matric" /></label>
+            <label class="field"><span>Presentes</span><input type="number" min="0" step="1" data-f="pres" /></label>
+          </div>
+          <h4>Escala Hedônica</h4>
+          <div class="hedonic-form">
+            <label class="hf hf--ok"><span class="face">😍</span><span class="hf__t">Adorei</span><input type="number" min="0" step="1" data-f="adorei" value="0" /></label>
+            <label class="hf hf--ok"><span class="face">🙂</span><span class="hf__t">Gostei</span><input type="number" min="0" step="1" data-f="gostei" value="0" /></label>
+            <label class="hf"><span class="face">😐</span><span class="hf__t">Indiferente</span><input type="number" min="0" step="1" data-f="indif" value="0" /></label>
+            <label class="hf"><span class="face">🙁</span><span class="hf__t">Não gostei</span><input type="number" min="0" step="1" data-f="naogostei" value="0" /></label>
+            <label class="hf"><span class="face">😖</span><span class="hf__t">Detestei</span><input type="number" min="0" step="1" data-f="detestei" value="0" /></label>
+          </div>
+          <div class="turma__resumo" data-turma-resumo></div>
+        </div>
+      </div>
+    </template>
+
     <!-- BUSCA -->
     <section class="view" id="searchView" data-title="Busca" hidden>
       <h2>Resultados</h2>
@@ -488,6 +557,8 @@
     <small>Boletim Alimentação · 24ª ed · 06/2026 · Gerência de Supervisão Técnica e Educação Alimentar e Nutricional — DIAE/SEE-DF</small>
   </footer>
 
+  <script src="lib/xlsx.full.min.js" defer></script>
+  <script src="registro.js" defer></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {
