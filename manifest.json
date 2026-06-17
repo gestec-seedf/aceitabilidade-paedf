@@ -1,0 +1,17 @@
+{
+  "name": "Aceitabilidade · PAE-DF",
+  "short_name": "Aceitabilidade",
+  "description": "Manual de bolso para aplicação dos testes de aceitabilidade na alimentação escolar do DF.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b6b3a",
+  "theme_color": "#0b6b3a",
+  "icons": [
+    { "src": "icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/maskable-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

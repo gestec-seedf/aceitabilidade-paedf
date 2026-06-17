@@ -1,0 +1,70 @@
+APP DE BOLSO — ACEITABILIDADE · PAE-DF
+========================================
+
+O QUE É
+-------
+Um app web (PWA) que reúne todo o conteúdo do Boletim Aceitabilidade
+para consulta rápida no celular ou computador, com busca, modo escuro
+e 4 calculadoras (aceitação, resto-ingestão, adesão e amostra).
+
+ARQUIVOS DA PASTA
+-----------------
+- index.html  → tela principal
+- styles.css  → estilos
+- app.js      → lógica (navegação, busca, calculadoras)
+- manifest.json → metadados do app (nome, ícones, cores)
+- sw.js       → service worker (faz o app funcionar offline)
+- icons/      → ícones do app
+
+COMO USAR NO COMPUTADOR (mais simples)
+--------------------------------------
+1. Abra a pasta "app" no Explorador de Arquivos.
+2. Clique duas vezes em "index.html".
+3. O navegador abre o app. Pronto, já dá pra consultar.
+
+   Obs.: o modo offline (service worker) só funciona se o app for
+   aberto via http(s), não via arquivo local. Para isso, use uma
+   das opções abaixo.
+
+COMO USAR NO CELULAR (recomendado: instala como app)
+----------------------------------------------------
+Você precisa servir a pasta por http. Três jeitos fáceis:
+
+OPÇÃO A — Servidor local rápido (PowerShell, Python)
+   1. No Windows, abra o PowerShell.
+   2. Digite:
+        cd "C:\Users\netzn\Desktop\boletim aceitabilidade\app"
+        python -m http.server 8080
+   3. No celular (mesma rede Wi-Fi), abra o navegador e acesse:
+        http://SEU_IP_DO_PC:8080
+      (descubra o IP com: ipconfig → "Endereço IPv4")
+   4. No celular, no menu do navegador, escolha:
+        - Android (Chrome):  "Instalar app" ou "Adicionar à tela inicial"
+        - iOS (Safari):       botão Compartilhar → "Adicionar à Tela de Início"
+   5. O app vira um ícone na tela inicial — funciona offline depois
+      da primeira abertura.
+
+OPÇÃO B — Hospedar grátis (GitHub Pages, Netlify Drop, Vercel)
+   1. Arraste a pasta "app" em https://app.netlify.com/drop
+   2. Pegue o link gerado e abra no celular.
+   3. Instale como nas instruções acima.
+
+OPÇÃO C — Servir pela rede da escola/Intranet
+   Peça à equipe de TI para colocar a pasta em um servidor interno.
+
+RECURSOS DO APP
+---------------
+- Tela inicial com cards coloridos por seção.
+- Busca no topo (digita "85%", "escala", "resto"…).
+- Modo claro / escuro (botão da lua no topo).
+- Calculadoras prontas:
+   * Aceitação (escala hedônica)
+   * Resto-ingestão
+   * Índice de adesão
+   * Tamanho da amostra (com estratificação por Programa de Trabalho)
+- Funciona offline depois da primeira abertura via http(s).
+
+FONTE
+-----
+Boletim Alimentação — 24ª edição (06/2026) — PAE-DF / SEEDF.
+Gerência de Supervisão Técnica e Educação Alimentar e Nutricional — DIAE/SEE-DF.

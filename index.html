@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b6b3a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Aceitabilidade" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon-192.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.svg" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Aceitabilidade · PAE-DF</title>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <button class="iconbtn" id="backBtn" aria-label="Voltar" hidden>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+      <div class="topbar__title">
+        <strong id="topTitle">Aceitabilidade</strong>
+        <span class="topbar__subtitle">PAE-DF · Boletim 24ª ed.</span>
+      </div>
+      <button class="iconbtn" id="themeBtn" aria-label="Alternar tema">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 5 1.49-1.49zM9.5 14A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+      <input id="searchInput" type="search" placeholder="Buscar (ex.: 85%, escala, resto…)" autocomplete="off" />
+      <button class="clearbtn" id="clearSearch" aria-label="Limpar busca" hidden>×</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HOME -->
+    <section class="view" id="home" data-title="Aceitabilidade">
+      <div class="hero">
+        <span class="hero__tag">Boletim 24ª ed. · 06/2026</span>
+        <h1>A voz do estudante transforma o cardápio</h1>
+        <p>Manual de bolso para aplicação dos testes de aceitabilidade na alimentação escolar do DF.</p>
+      </div>
+
+      <h2 class="section-h">Consulta rápida</h2>
+      <div class="cards">
+        <a class="card card--green" href="#" data-view="conceito">
+          <div class="card__icon">📖</div>
+          <div class="card__t">Conceito</div>
+          <div class="card__s">O que é, por quê e para quem</div>
+        </a>
+        <a class="card card--blue" href="#" data-view="legal">
+          <div class="card__icon">⚖️</div>
+          <div class="card__t">Base Legal</div>
+          <div class="card__s">Leis, resoluções e NT 3/2022</div>
+        </a>
+        <a class="card card--orange" href="#" data-view="escala">
+          <div class="card__icon">😋</div>
+          <div class="card__t">Escala Hedônica</div>
+          <div class="card__s">Facial, mista e verbal</div>
+        </a>
+        <a class="card card--purple" href="#" data-view="quando">
+          <div class="card__icon">⏱️</div>
+          <div class="card__t">Quando aplicar</div>
+          <div class="card__s">Critérios, dispensas e amostra</div>
+        </a>
+        <a class="card card--teal" href="#" data-view="resto">
+          <div class="card__icon">⚖</div>
+          <div class="card__t">Resto-Ingestão</div>
+          <div class="card__s">Passo a passo da pesagem</div>
+        </a>
+        <a class="card card--red" href="#" data-view="adesao">
+          <div class="card__icon">📊</div>
+          <div class="card__t">Índice de Adesão</div>
+          <div class="card__s">Fórmula e classificação</div>
+        </a>
+        <a class="card card--brown" href="#" data-view="dentrofora">
+          <div class="card__icon">🛒</div>
+          <div class="card__t">Dentro-Fora</div>
+          <div class="card__s">Teste antes da compra</div>
+        </a>
+        <a class="card card--gray" href="#" data-view="glossario">
+          <div class="card__icon">🔤</div>
+          <div class="card__t">Glossário</div>
+          <div class="card__s">Texturas e termos</div>
+        </a>
+        <a class="card card--navy" href="#" data-view="arvore">
+          <div class="card__icon">🌳</div>
+          <div class="card__t">Árvore Decisória</div>
+          <div class="card__s">Qual teste aplicar?</div>
+        </a>
+        <a class="card card--magenta" href="#" data-view="fluxo">
+          <div class="card__icon">🧭</div>
+          <div class="card__t">Fluxo PAE-DF</div>
+          <div class="card__s">Da amostra ao relatório</div>
+        </a>
+      </div>
+
+      <h2 class="section-h">Calculadoras</h2>
+      <div class="cards cards--calc">
+        <a class="card card--accent" href="#" data-view="calc-aceitacao">
+          <div class="card__icon">🧮</div>
+          <div class="card__t">Aceitação</div>
+          <div class="card__s">Escala hedônica → % aceita</div>
+        </a>
+        <a class="card card--accent" href="#" data-view="calc-resto">
+          <div class="card__icon">🧮</div>
+          <div class="card__t">Resto-Ingestão</div>
+          <div class="card__s">Peso → % aceitação</div>
+        </a>
+        <a class="card card--accent" href="#" data-view="calc-adesao">
+          <div class="card__icon">🧮</div>
+          <div class="card__t">Adesão</div>
+          <div class="card__s">Presentes × consumidores</div>
+        </a>
+        <a class="card card--accent" href="#" data-view="calc-amostra">
+          <div class="card__icon">🧮</div>
+          <div class="card__t">Amostra</div>
+          <div class="card__s">100–500 alunos, estratificada</div>
+        </a>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><b>≥85%</b><span>aceita na escala hedônica</span></div>
+        <div class="kpi"><b>≥90%</b><span>aceita no resto-ingestão</span></div>
+        <div class="kpi"><b>100–500</b><span>estudantes na amostra</span></div>
+        <div class="kpi"><b>até 3×</b><span>aplicações por preparação</span></div>
+      </div>
+    </section>
+
+    <!-- CONCEITO -->
+    <section class="view" id="conceito" data-title="Conceito" hidden>
+      <h2>O que é a aceitabilidade na alimentação escolar</h2>
+      <p>Para a alimentação escolar cumprir seu papel, não basta ser nutritiva: o estudante precisa <b>gostar e consumir</b>. O <b>teste de aceitabilidade</b> reúne procedimentos científicos que medem o índice de aceitação da alimentação oferecida aos escolares — parte da análise sensorial (visão, olfato, paladar, tato e audição).</p>
+      <div class="callout callout--info">
+        <b>A voz do estudante é dado técnico.</b> Ouvir os alunos transforma a opinião em informação para decidir o que entra, permanece ou sai do cardápio.
+      </div>
+      <h3>Por que importa</h3>
+      <div class="grid3">
+        <div class="tile"><b>Mais qualidade</b><p>Aceitação é fator decisivo da qualidade do serviço.</p></div>
+        <div class="tile"><b>Menos desperdício</b><p>Evita comprar gêneros que seriam rejeitados.</p></div>
+        <div class="tile"><b>Mais adesão</b><p>Comida aceita e saudável melhora desempenho e hábitos.</p></div>
+      </div>
+      <div class="callout">
+        <b>Sabia?</b> O PNAE foi implantado em 1955; no DF é executado pelo PAE-DF. Testes são obrigatórios sempre que houver alimento novo, mudança de preparo ou avaliação de cardápios já praticados.
+      </div>
+      <h3>Por que ouvir os estudantes?</h3>
+      <p>A alimentação escolar é direito dos alunos da educação básica pública e dever do Estado (Lei 11.947/2009). Quando uma preparação não atinge o índice esperado, o nutricionista pode desenvolver educação alimentar e nutricional e fazer <b>correções sensoriais</b> antes de testá-la novamente.</p>
+    </section>
+
+    <!-- BASE LEGAL -->
+    <section class="view" id="legal" data-title="Base Legal" hidden>
+      <h2>Base legal que sustenta os testes</h2>
+      <ul class="lawlist">
+        <li><b>Lei 11.947/2009</b> — alimentação escolar dos alunos da educação básica.</li>
+        <li><b>Resolução FNDE 38/2009</b></li>
+        <li><b>Resolução FNDE 26/2013</b></li>
+        <li><b>Resolução FNDE 06/2020</b></li>
+        <li><b>Nota Técnica 3/2022 — SEE/DIAE/GPAE</b> — padroniza, no DF, amostra, frequência, seleção de preparações e resultados consolidados.</li>
+      </ul>
+      <h3>Métodos de análise sensorial</h3>
+      <div class="grid3">
+        <div class="tile"><b>Descritivo</b><p>Equipes treinadas medem intensidade dos atributos (sabor, textura, aroma, cor).</p></div>
+        <div class="tile"><b>Discriminativo</b><p>Verifica diferença entre amostras (Duo-Trio, Pareado, Triangular, Ordenação, Comparação Múltipla).</p></div>
+        <div class="tile tile--accent"><b>Afetivo ★</b><p>Avalia preferência e aceitação. Inclui o Teste de Aceitação com escala hedônica — adotado pelo PNAE.</p></div>
+      </div>
+    </section>
+
+    <!-- ESCALA -->
+    <section class="view" id="escala" data-title="Escala Hedônica" hidden>
+      <h2>Escala hedônica de 5 pontos</h2>
+      <p>O estudante marca a carinha que representa o quanto gostou. <b>"Gostei" e "Adorei" contam como aceitação</b>.</p>
+      <ul class="hedonic">
+        <li><span class="face">😖</span><div><b>Detestei</b><p>Não gostou nada da preparação.</p></div></li>
+        <li><span class="face">🙁</span><div><b>Não gostei</b><p>Achou pouco agradável.</p></div></li>
+        <li><span class="face">😐</span><div><b>Indiferente</b><p>Não gostou nem desgostou.</p></div></li>
+        <li class="hedonic--ok"><span class="face">🙂</span><div><b>Gostei</b><p>Gostou da preparação.</p></div></li>
+        <li class="hedonic--ok"><span class="face">😍</span><div><b>Adorei</b><p>Gostou muito! Aceitação plena.</p></div></li>
+      </ul>
+      <div class="callout callout--ok">
+        ▲ Aceita quando <b>"Gostei + Adorei" ≥ 85%</b>
+      </div>
+      <h3>A ficha certa para cada idade</h3>
+      <div class="grid3">
+        <div class="tile"><b>Facial</b><p>Pré ao 3º ano</p></div>
+        <div class="tile"><b>Facial mista</b><p>4º ao 5º ano</p></div>
+        <div class="tile"><b>Verbal</b><p>A partir do 6º ano</p></div>
+      </div>
+      <div class="tile" style="margin-top:.6rem"><b>Braile / relevo</b><p>Para deficiência visual.</p></div>
+      <h3>Cartelas lúdicas — o teste como votação</h3>
+      <p>Cada carinha vira uma cartela individual. O estudante escolhe uma e deposita em uma urna — como em uma votação.</p>
+      <div class="grid2">
+        <div class="tile"><b>Formato</b><p>Cartela de ~7×7 cm, carinha ao centro e palavra abaixo. Para uso permanente, plastifique e arredonde os cantos.</p></div>
+        <div class="tile"><b>Urna</b><p>Caixa de cor neutra, sem propaganda e sem cores associadas a gênero, com abertura na parte superior.</p></div>
+      </div>
+      <div class="callout">
+        <b>Sugestão:</b> depois da votação, converse com a turma sobre os pontos positivos e negativos de cada preparação.
+      </div>
+      <h3>Dicas de aplicação</h3>
+      <ul class="dots">
+        <li>Chegar 1h antes.</li>
+        <li>Usar a receita padrão.</li>
+        <li>Promover julgamento individual (sem conversas).</li>
+        <li>Registrar o que o aluno mais e menos gostou.</li>
+      </ul>
+    </section>
+
+    <!-- QUANDO -->
+    <section class="view" id="quando" data-title="Quando aplicar" hidden>
+      <h2>Quando aplicar o teste?</h2>
+      <ul class="dots">
+        <li>Antes do processo licitatório ou de aquisição, para avaliar novos produtos.</li>
+        <li>Na introdução de alimento atípico ao hábito alimentar local.</li>
+        <li>Em quaisquer alterações inovadoras no preparo das refeições.</li>
+        <li>Para avaliar a aceitação das preparações mais frequentes no cardápio.</li>
+      </ul>
+      <div class="callout callout--warn">
+        <b>Dispensas:</b> frutas e hortaliças (ou preparações compostas majoritariamente por elas) e a educação infantil de 0 a 3 anos (creche) — nessa faixa recomendam-se de 8 a 10 exposições até a aceitação. O intervalo mínimo entre aplicações é de <b>um bimestre</b>.
+      </div>
+      <h3>Métodos adotados pelo PNAE</h3>
+      <div class="grid2">
+        <div class="tile tile--accent"><b>Escala hedônica ★</b><p>Indica o quanto gostou (facial, mista ou verbal). Preferida no PAE-DF.</p></div>
+        <div class="tile"><b>Resto-ingestão</b><p>Mede o peso do que sobrou nos pratos em relação ao distribuído. No DF, só quando houver necessidade específica.</p></div>
+      </div>
+      <h3>Números que importam</h3>
+      <div class="kpis">
+        <div class="kpi"><b>≥85%</b><span>escala hedônica</span></div>
+        <div class="kpi"><b>≥90%</b><span>resto-ingestão</span></div>
+        <div class="kpi"><b>100–500</b><span>estudantes</span></div>
+        <div class="kpi"><b>até 3×</b><span>por preparação</span></div>
+      </div>
+      <h3>Montando o teste: equipe e amostra</h3>
+      <ul class="dots">
+        <li><b>Tamanho:</b> 100 a 500 estudantes, dos turnos matutino e vespertino. Selecionar escola com ao menos <b>20% a mais</b> do mínimo necessário.</li>
+        <li><b>Equipe mínima:</b> dois aplicadores (Aplicador 1 e Aplicador 2), com funções distintas e complementares.</li>
+        <li><b>Estratificação:</b> verificar se há necessidade de separar estudantes por características que possam influenciar.</li>
+        <li><b>Sorteio:</b> sempre que possível, as turmas participantes são sorteadas.</li>
+      </ul>
+      <div class="callout callout--info">
+        <b>Estratificação por Programa de Trabalho (DF):</b> a amostra é representativa de todo o DF e proporcional aos Programas de Trabalho — Pré, EF anos iniciais, EF anos finais, Médio e EJA — recalculada quando há alteração significativa no nº de alunos atendidos.
+      </div>
+    </section>
+
+    <!-- RESTO -->
+    <section class="view" id="resto" data-title="Resto-Ingestão" hidden>
+      <h2>Resto-ingestão: passo a passo</h2>
+      <p>Quando há justificativa específica, mede-se o peso do que sobra nos pratos em relação ao que foi distribuído.</p>
+      <ol class="steps">
+        <li><b>Materiais</b> — balança (com pilhas extras, se digital), planilhas, canetas, prancheta e sacos plásticos.</li>
+        <li><b>Calibração</b> — afira a balança com um peso conhecido (ex.: 1 kg de açúcar) e anote.</li>
+        <li><b>Aplicador 1</b> — pesa a preparação pronta e a sobra nos recipientes.</li>
+        <li><b>Aplicador 2</b> — pesa o resto deixado nos pratos (descontando o saco de lixo vazio).</li>
+        <li><b>Descarte</b> — use saco/lixo exclusivo para a preparação testada, separado dos demais resíduos.</li>
+      </ol>
+      <div class="callout callout--warn">
+        <b>Atenção:</b> pese líquidos à parte (jarras/bacias, nunca no saco de lixo); desconte ossos e cascas; o porcionamento pode influenciar — o resto no prato nem sempre indica rejeição.
+      </div>
+      <div class="formula">
+        <b>% rejeição</b> = (peso do resto ÷ peso distribuído) × 100<br />
+        <b>% aceitação</b> = 100 − % rejeição<br />
+        <span class="ok">Aceita quando ≥ 90%</span>
+      </div>
+      <a class="cta" href="#" data-view="calc-resto">Abrir calculadora →</a>
+    </section>
+
+    <!-- ADESÃO -->
+    <section class="view" id="adesao" data-title="Índice de Adesão" hidden>
+      <h2>O índice de adesão</h2>
+      <p>Junto ao teste, calcula-se a adesão: o percentual de estudantes presentes que optaram por consumir a refeição.</p>
+      <div class="formula">
+        <b>Índice de Adesão</b> = (nº de estudantes que consumiram ÷ nº de presentes na escola) × 100
+      </div>
+      <h3>Classificação</h3>
+      <ul class="ranks">
+        <li class="rank rank--alto"><b>Alto</b><span>acima de 70%</span></li>
+        <li class="rank rank--medio"><b>Médio</b><span>50 a 70%</span></li>
+        <li class="rank rank--baixo"><b>Baixo</b><span>30 a 50%</span></li>
+        <li class="rank rank--mb"><b>Muito baixo</b><span>menor que 30%</span></li>
+      </ul>
+      <a class="cta" href="#" data-view="calc-adesao">Abrir calculadora →</a>
+      <h3>Por que os alunos comem (ou não)?</h3>
+      <p>Um questionário revela os motivos. Pontos investigados:</p>
+      <ul class="dots">
+        <li>Frequência com que consome a refeição.</li>
+        <li>Preparações que mais gosta e que não gosta.</li>
+        <li>Temperatura e quantidade da comida.</li>
+        <li>Conforto do refeitório e qualidade de talheres, copos e pratos.</li>
+        <li>Tempo disponível para comer e tamanho da fila.</li>
+        <li>Compras na cantina ou fora da escola — e por quê.</li>
+      </ul>
+      <div class="callout callout--info">
+        <b>Clima, dia e horário também contam.</b> A sopa costuma ser mais aceita em dias frios do que em dias quentes.
+      </div>
+    </section>
+
+    <!-- DENTRO-FORA -->
+    <section class="view" id="dentrofora" data-title="Dentro-Fora" hidden>
+      <h2>Antes da compra: o teste "dentro-fora"</h2>
+      <p>Para produtos que serão adquiridos (licitação ou chamada pública), aplica-se um teste com provadores antes da compra, evitando desperdício.</p>
+      <ul class="dots">
+        <li><b>Equipe:</b> 10 a 15 pessoas (CAE, nutricionista, merendeiros e maiores de 21 anos da comunidade). Assinam o relatório sem revelar o fornecedor (usa-se o CNPJ).</li>
+        <li><b>Regras:</b> teste cego e no máximo 2 produtos por dia (fadiga sensorial).</li>
+        <li><b>Critério:</b> aprovado quando <b>≥ 85%</b> dos provadores classificam o produto como "dentro" do padrão.</li>
+      </ul>
+      <h3>Atributos "dentro" × "fora" do padrão</h3>
+      <table class="tbl">
+        <thead><tr><th>Atributo</th><th>Dentro</th><th>Fora</th></tr></thead>
+        <tbody>
+          <tr class="tbl__group"><td colspan="3">MACARRÃO</td></tr>
+          <tr><td>Cor</td><td>Pouco esbranquiçado</td><td>Muito esbranquiçada</td></tr>
+          <tr><td>Mastigabilidade</td><td>Fácil mastigação</td><td>Difícil mastigação</td></tr>
+          <tr class="tbl__group"><td colspan="3">CARNE BOVINA</td></tr>
+          <tr><td>Aroma</td><td>Característico</td><td>Não característico</td></tr>
+          <tr><td>Sabor</td><td>Sem sabor residual</td><td>Com sabor residual (cru)</td></tr>
+          <tr><td>Sabor</td><td>Não rançoso</td><td>Rançoso</td></tr>
+          <tr><td>Mastigabilidade</td><td>Fácil mastigação</td><td>Difícil mastigação</td></tr>
+          <tr><td>Suculência</td><td>Muita suculência</td><td>Pouca suculência</td></tr>
+          <tr class="tbl__group"><td colspan="3">ARROZ</td></tr>
+          <tr><td>Cor</td><td>Branco</td><td>Amarelo</td></tr>
+          <tr><td>Coesividade</td><td>Grãos bem separados</td><td>Grãos pastosos</td></tr>
+          <tr class="tbl__group"><td colspan="3">FEIJÃO</td></tr>
+          <tr><td>Sabor</td><td>Característico de feijão cozido</td><td>Pouco característico</td></tr>
+          <tr><td>Caldo</td><td>Caldo espesso</td><td>Grânulos grosseiros</td></tr>
+          <tr class="tbl__group"><td colspan="3">BISCOITO (DOCE E SALGADO)</td></tr>
+          <tr><td>Fraturabilidade</td><td>Muito crocante</td><td>Pouco crocante</td></tr>
+          <tr><td>Adesividade</td><td>Pouca força p/ remover da boca</td><td>Muita força p/ remover da boca</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- GLOSSÁRIO -->
+    <section class="view" id="glossario" data-title="Glossário" hidden>
+      <h2>Entendendo as texturas</h2>
+      <dl class="gloss">
+        <dt>Dureza</dt><dd>Força para comprimir o alimento entre os dentes (ou língua e palato).</dd>
+        <dt>Coesividade</dt><dd>Força das ligações internas; o quanto resiste antes de se romper.</dd>
+        <dt>Adesividade</dt><dd>Força para remover o alimento que adere à boca.</dd>
+        <dt>Fraturabilidade</dt><dd>Força para esmigalhar ou quebrar (alimentos crocantes).</dd>
+        <dt>Mastigabilidade</dt><dd>Energia e tempo para mastigar até poder engolir.</dd>
+        <dt>Uso</dt><dd>Termos usados no teste "dentro-fora" para descrever os produtos.</dd>
+      </dl>
+    </section>
+
+    <!-- ÁRVORE -->
+    <section class="view" id="arvore" data-title="Árvore Decisória" hidden>
+      <h2>Qual teste aplicar?</h2>
+      <div class="tree">
+        <div class="tree__root">Objetivo do teste</div>
+        <div class="tree__row">
+          <div class="tree__branch">
+            <div class="tree__h">Antes da compra</div>
+            <div class="tree__leaf">Teste "dentro-fora" com equipe de provadores</div>
+          </div>
+          <div class="tree__branch">
+            <div class="tree__h">Com os alunos</div>
+            <div class="tree__leaves">
+              <div class="tree__leaf">Escala hedônica<br /><small>facial / mista / verbal</small></div>
+              <div class="tree__leaf">Resto-ingestão<br /><small>avaliação de restos</small></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="callout callout--info">
+        A ficha da escala hedônica é escolhida pela idade: <b>facial</b> (pré ao 3º), <b>mista</b> (4º–5º) e <b>verbal</b> (a partir do 6º). Os testes são coordenados pela nutricionista RT e aplicados pelas nutricionistas do Quadro Técnico.
+      </div>
+    </section>
+
+    <!-- FLUXO -->
+    <section class="view" id="fluxo" data-title="Fluxo PAE-DF" hidden>
+      <h2>Como o PAE-DF faz na prática</h2>
+      <ol class="bigsteps">
+        <li><b>Calcular a amostra</b><p>100 a 500 estudantes, representativa do DF, estratificada por Programa de Trabalho.</p></li>
+        <li><b>Aplicar as fichas</b><p>Fichas da escala hedônica adequadas à idade: facial, mista e verbal.</p></li>
+        <li><b>Registrar as respostas</b><p>Tabela preenchida manualmente, por turma: matriculados, presentes, participantes, adesão e contagem de cada carinha.</p></li>
+        <li><b>Tabular os resultados</b><p>Planilha que calcula a aceitação (Adorei + Gostei) e a adesão, por turma e no total.</p></li>
+        <li><b>Elaborar o relatório</b><p>Documento oficial com introdução, metodologia, resultados, discussão e recomendações — arquivado por no mínimo 5 anos.</p></li>
+      </ol>
+      <div class="callout callout--info">
+        <b>Exemplo real:</b> em 02/06/2022, no CEM 01 do Guará, a pamonha (sal e doce) foi testada com 41 estudantes (38 válidos). Aceitação: 83,3% (doce) e 71,4% (salgada) — abaixo dos 85%. Produto novo: não foi aceito e não entrou no cardápio.
+      </div>
+      <h3>O registro deve conter</h3>
+      <ul class="dots">
+        <li>Nome da preparação, data e local.</li>
+        <li>Teste utilizado.</li>
+        <li>Número de participantes e de matriculados.</li>
+        <li>Percentual de aceitabilidade e índice de adesão.</li>
+        <li>Assinaturas do diretor e do responsável pela aplicação.</li>
+      </ul>
+    </section>
+
+    <!-- ===================== CALCULADORAS ===================== -->
+
+    <section class="view" id="calc-aceitacao" data-title="Calc · Aceitação" hidden>
+      <h2>Calculadora — Escala Hedônica</h2>
+      <p>Informe a contagem de fichas por categoria. <b>Aceitação = (Gostei + Adorei) ÷ total</b>.</p>
+      <form class="calc" id="formAceitacao">
+        <label>Detestei <input type="number" min="0" step="1" name="detestei" value="0" /></label>
+        <label>Não gostei <input type="number" min="0" step="1" name="naogostei" value="0" /></label>
+        <label>Indiferente <input type="number" min="0" step="1" name="indif" value="0" /></label>
+        <label class="ok">Gostei <input type="number" min="0" step="1" name="gostei" value="0" /></label>
+        <label class="ok">Adorei <input type="number" min="0" step="1" name="adorei" value="0" /></label>
+        <div class="calc__actions">
+          <button type="button" id="aceitacaoCalc" class="btn">Calcular</button>
+          <button type="reset" class="btn btn--ghost">Limpar</button>
+        </div>
+        <div class="result" id="aceitacaoResult"></div>
+      </form>
+    </section>
+
+    <section class="view" id="calc-resto" data-title="Calc · Resto-Ingestão" hidden>
+      <h2>Calculadora — Resto-Ingestão</h2>
+      <p>Informe os pesos. <b>% aceitação = 100 − (resto ÷ distribuído × 100)</b>. Aceita quando ≥ 90%.</p>
+      <form class="calc" id="formResto">
+        <label>Peso distribuído (g ou kg) <input type="number" min="0" step="0.01" name="dist" placeholder="ex.: 12000" /></label>
+        <label>Peso do resto (mesma unidade) <input type="number" min="0" step="0.01" name="resto" placeholder="ex.: 900" /></label>
+        <div class="calc__actions">
+          <button type="button" id="restoCalc" class="btn">Calcular</button>
+          <button type="reset" class="btn btn--ghost">Limpar</button>
+        </div>
+        <div class="result" id="restoResult"></div>
+      </form>
+    </section>
+
+    <section class="view" id="calc-adesao" data-title="Calc · Adesão" hidden>
+      <h2>Calculadora — Índice de Adesão</h2>
+      <p><b>Adesão = (consumiram ÷ presentes) × 100</b>. Classificação: Alto &gt;70% · Médio 50–70% · Baixo 30–50% · Muito baixo &lt;30%.</p>
+      <form class="calc" id="formAdesao">
+        <label>Presentes na escola <input type="number" min="0" step="1" name="presentes" placeholder="ex.: 320" /></label>
+        <label>Consumiram a refeição <input type="number" min="0" step="1" name="consumiram" placeholder="ex.: 240" /></label>
+        <div class="calc__actions">
+          <button type="button" id="adesaoCalc" class="btn">Calcular</button>
+          <button type="reset" class="btn btn--ghost">Limpar</button>
+        </div>
+        <div class="result" id="adesaoResult"></div>
+      </form>
+    </section>
+
+    <section class="view" id="calc-amostra" data-title="Calc · Amostra" hidden>
+      <h2>Calculadora — Tamanho da Amostra</h2>
+      <p>Estimativa baseada na NT 3/2022 (DF). A amostra deve ficar entre <b>100 e 500</b> estudantes, estratificada por Programa de Trabalho. Selecione a escola com pelo menos <b>+20%</b> sobre o mínimo necessário.</p>
+      <form class="calc" id="formAmostra">
+        <label>Total de matriculados (universo) <input type="number" min="1" step="1" name="N" placeholder="ex.: 800" /></label>
+        <label>Margem de erro (%) <input type="number" min="1" max="10" step="0.5" name="e" value="5" /></label>
+        <label>Nível de confiança
+          <select name="z">
+            <option value="1.645">90% (z=1,645)</option>
+            <option value="1.96" selected>95% (z=1,96)</option>
+            <option value="2.575">99% (z=2,575)</option>
+          </select>
+        </label>
+        <div class="calc__actions">
+          <button type="button" id="amostraCalc" class="btn">Calcular</button>
+          <button type="reset" class="btn btn--ghost">Limpar</button>
+        </div>
+        <div class="result" id="amostraResult"></div>
+      </form>
+      <h3>Estratificação proporcional</h3>
+      <p>Informe os totais por Programa de Trabalho para distribuir a amostra:</p>
+      <form class="calc calc--strat" id="formEstrat">
+        <label>Pré <input type="number" min="0" step="1" name="s1" value="0" /></label>
+        <label>EF anos iniciais <input type="number" min="0" step="1" name="s2" value="0" /></label>
+        <label>EF anos finais <input type="number" min="0" step="1" name="s3" value="0" /></label>
+        <label>Médio <input type="number" min="0" step="1" name="s4" value="0" /></label>
+        <label>EJA <input type="number" min="0" step="1" name="s5" value="0" /></label>
+        <label>Amostra total <input type="number" min="1" step="1" name="n" placeholder="use o resultado acima" /></label>
+        <div class="calc__actions">
+          <button type="button" id="estratCalc" class="btn">Distribuir</button>
+        </div>
+        <div class="result" id="estratResult"></div>
+      </form>
+    </section>
+
+    <!-- BUSCA -->
+    <section class="view" id="searchView" data-title="Busca" hidden>
+      <h2>Resultados</h2>
+      <div id="searchResults" class="searchResults"></div>
+    </section>
+
+  </main>
+
+  <footer class="foot">
+    <small>Boletim Alimentação · 24ª ed · 06/2026 · Gerência de Supervisão Técnica e Educação Alimentar e Nutricional — DIAE/SEE-DF</small>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

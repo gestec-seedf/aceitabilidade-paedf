@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0e8a4a"/>
+      <stop offset="1" stop-color="#0b6b3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="40" fill="url(#g)"/>
+  <!-- prato -->
+  <circle cx="96" cy="108" r="48" fill="#fff" opacity=".95"/>
+  <circle cx="96" cy="108" r="36" fill="none" stroke="#0b6b3a" stroke-width="3" opacity=".25"/>
+  <!-- carinha sorrindo (aceito) -->
+  <circle cx="78" cy="100" r="5" fill="#0b6b3a"/>
+  <circle cx="114" cy="100" r="5" fill="#0b6b3a"/>
+  <path d="M74 118 Q96 138 118 118" stroke="#0b6b3a" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <!-- check pequeno -->
+  <circle cx="148" cy="52" r="20" fill="#fff"/>
+  <path d="M138 53 L145 60 L158 46" stroke="#0b6b3a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
