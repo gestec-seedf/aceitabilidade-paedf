@@ -386,14 +386,35 @@ main { max-width: 720px; margin: 0 auto; padding: .9rem .8rem 1.5rem; }
 }
 .btn--small { padding: .35rem .7rem; font-size: .82rem; flex: 0 0 auto; }
 
+#turmasList { display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 1rem; }
 .turma {
   background: var(--card); border: 1px solid var(--line);
-  border-radius: 14px; padding: .7rem; margin-bottom: .7rem;
+  border-radius: 14px; padding: 1rem .9rem 1.1rem;
   box-shadow: var(--shadow);
 }
+.turma + .turma { position: relative; }
 .turma__head {
-  display: flex; gap: .5rem; align-items: center; margin-bottom: .5rem;
+  display: flex; gap: .55rem; align-items: center;
+  margin-bottom: .9rem; padding-bottom: .7rem;
+  border-bottom: 1px solid var(--line);
 }
+.turma__body > .grid2 { margin-bottom: .25rem; }
+.turma__body .field { padding: .6rem .75rem; }
+.addturma-wrap {
+  display: flex; justify-content: center;
+  margin: .25rem 0 1.5rem;
+}
+.btn--add {
+  flex: 0 0 auto; width: 100%;
+  background: transparent;
+  color: var(--green);
+  border: 2px dashed var(--green);
+  padding: .85rem 1rem; font-size: 1rem; font-weight: 700;
+  border-radius: 12px;
+}
+.btn--add:active { background: var(--green-3); }
+[data-theme="dark"] .btn--add { color: #5fd49a; border-color: #5fd49a; }
+[data-theme="dark"] .btn--add:active { background: #0c2c1d; }
 .turma__nome {
   flex: 1; border: 0; outline: none;
   background: var(--bg); color: var(--text);
@@ -408,7 +429,7 @@ main { max-width: 720px; margin: 0 auto; padding: .9rem .8rem 1.5rem; }
 }
 .turma__del:active { background: var(--red); color: #fff; }
 .turma h4 {
-  margin: .8rem 0 .35rem; font-size: .88rem;
+  margin: 1.1rem 0 .5rem; font-size: .88rem;
   color: var(--green); text-transform: uppercase; letter-spacing: .05em;
 }
 [data-theme="dark"] .turma h4 { color: #5fd49a; }
@@ -464,7 +485,7 @@ main { max-width: 720px; margin: 0 auto; padding: .9rem .8rem 1.5rem; }
 [data-theme="dark"] .hf__warn { background: #3b2a14; color: #fbbf24; }
 
 .turma__resumo:not(:empty) {
-  margin-top: .6rem; padding-top: .55rem;
+  margin-top: 1rem; padding-top: .85rem;
   border-top: 1px dashed var(--line);
 }
 .turma__metrics {
