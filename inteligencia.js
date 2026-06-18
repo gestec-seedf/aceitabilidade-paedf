@@ -300,6 +300,12 @@
 
   // ---------- render geral ----------
   function render() {
+    // Gate de credencial (default-deny): sem o módulo de credencial carregado, ou sem
+    // login, o BI não exibe nenhum dado. nuvem.js mostra o formulário de senha.
+    if (!window.PAENuvem || !window.PAENuvem.isAuthed()) {
+      if (window.PAENuvem) window.PAENuvem.applyGate();
+      return;
+    }
     try { renderAtual(); } catch (e) { elAtual.innerHTML = '<p class="muted">Erro ao montar diagnóstico.</p>'; }
     try { renderHistorico(); } catch (e) { elHist.innerHTML = '<p class="muted">Erro ao montar histórico.</p>'; }
   }

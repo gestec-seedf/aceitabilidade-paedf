@@ -557,46 +557,60 @@
     <!-- INTELIGÊNCIA -->
     <section class="view" id="inteligencia" data-title="Inteligência" hidden>
       <h2>Painel de Inteligência</h2>
-      <p>Análise dos dados do questionário: diagnóstico do teste em edição e histórico dos testes salvos neste aparelho. Nada sai do dispositivo.</p>
 
-      <h3>Diagnóstico do teste atual</h3>
-      <div id="intelAtual" class="resumo"></div>
-
-      <h3>Histórico de testes</h3>
-      <div id="intelHistorico" class="resumo"></div>
-
-      <h3>Relatório consolidado</h3>
-      <p class="meta">Gera um relatório com todos os testes salvos (indicadores, ranking, por escola e reprovadas).</p>
-      <div class="actions">
-        <button type="button" class="btn" id="repPdf">📄 PDF</button>
-        <button type="button" class="btn" id="repXlsx">📊 Excel</button>
-        <button type="button" class="btn" id="repDocx">📝 Word</button>
-        <button type="button" class="btn" id="repOdt">📃 ODT</button>
+      <!-- GATE: acesso restrito por credencial -->
+      <div id="biGate" hidden>
+        <div class="result warn">
+          <b>🔒 Acesso restrito</b>
+          <div class="meta">O painel reúne os dados consolidados de todas as escolas. Informe a credencial da gestão para acessar.</div>
+        </div>
+        <div class="form-grid">
+          <label class="field"><span>Senha de acesso</span><input type="password" id="biPass" autocomplete="current-password" placeholder="credencial da gestão" /></label>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn--add" id="biEnter">🔓 Entrar</button>
+        </div>
+        <div id="biGateMsg" class="meta" style="min-height:1rem;"></div>
       </div>
 
-      <h3>Gerenciar histórico</h3>
-      <div class="actions">
-        <button type="button" class="btn" id="exportHist">⬇️ Exportar (JSON)</button>
-        <button type="button" class="btn" id="importHistBtn">⬆️ Importar (JSON)</button>
-        <button type="button" class="btn btn--ghost" id="clearHist">🗑️ Limpar histórico</button>
-        <input type="file" id="importHistFile" accept="application/json,.json" hidden />
-      </div>
-      <div id="intelMsg" class="meta" style="margin-top:.5rem; min-height:1rem;"></div>
+      <!-- CONTEÚDO: visível apenas após login -->
+      <div id="biContent" hidden>
+        <p>Análise consolidada dos testes de aceitabilidade de <b>todas as escolas</b> que sincronizam, mais o diagnóstico do teste em edição neste aparelho.</p>
 
-      <h3>Sincronização com a nuvem (opcional)</h3>
-      <p class="meta">Permite reunir os testes de várias nutricionistas em uma Planilha Google central e ver o painel/relatórios de <b>todas as escolas</b>. Sem preencher, o app funciona 100% local. Configuração: veja <b>GUIA-NUVEM.md</b>.</p>
-      <div class="form-grid">
-        <label class="field"><span>URL do Web App (envio)</span><input type="url" id="cloudWriteUrl" placeholder="https://script.google.com/macros/s/.../exec" /></label>
-        <label class="field"><span>URL CSV publicada (leitura)</span><input type="url" id="cloudReadUrl" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" /></label>
+        <h3>Diagnóstico do teste atual</h3>
+        <div id="intelAtual" class="resumo"></div>
+
+        <h3>Histórico de testes</h3>
+        <div id="intelHistorico" class="resumo"></div>
+
+        <h3>Relatório consolidado</h3>
+        <p class="meta">Gera um relatório com todos os testes salvos (indicadores, ranking, por escola e reprovadas).</p>
+        <div class="actions">
+          <button type="button" class="btn" id="repPdf">📄 PDF</button>
+          <button type="button" class="btn" id="repXlsx">📊 Excel</button>
+          <button type="button" class="btn" id="repDocx">📝 Word</button>
+          <button type="button" class="btn" id="repOdt">📃 ODT</button>
+        </div>
+
+        <h3>Gerenciar histórico</h3>
+        <div class="actions">
+          <button type="button" class="btn" id="exportHist">⬇️ Exportar (JSON)</button>
+          <button type="button" class="btn" id="importHistBtn">⬆️ Importar (JSON)</button>
+          <button type="button" class="btn btn--ghost" id="clearHist">🗑️ Limpar histórico</button>
+          <input type="file" id="importHistFile" accept="application/json,.json" hidden />
+        </div>
+        <div id="intelMsg" class="meta" style="margin-top:.5rem; min-height:1rem;"></div>
+
+        <h3>Sincronização com a nuvem</h3>
+        <p class="meta">A sincronização é <b>automática</b>: cada teste salvo é enviado para a planilha central. Sem internet, fica pendente e é reenviado sozinho.</p>
+        <div class="actions">
+          <button type="button" class="btn" id="cloudPull">🔄 Atualizar dados da nuvem</button>
+          <button type="button" class="btn btn--ghost" id="cloudFlush">🔄 Reenviar pendentes</button>
+          <button type="button" class="btn btn--ghost" id="biLogout">🚪 Sair</button>
+        </div>
+        <div id="cloudStatus" class="meta" style="margin-top:.5rem"></div>
+        <div id="cloudMsg" class="meta" style="min-height:1rem;"></div>
       </div>
-      <div class="actions">
-        <button type="button" class="btn btn--add" id="cloudSave">💾 Salvar configuração</button>
-        <button type="button" class="btn" id="cloudPull">☁️ Ver dados da nuvem</button>
-        <button type="button" class="btn btn--ghost" id="cloudLocal">📱 Ver dados locais</button>
-        <button type="button" class="btn btn--ghost" id="cloudFlush">🔄 Reenviar pendentes</button>
-      </div>
-      <div id="cloudStatus" class="meta" style="margin-top:.5rem"></div>
-      <div id="cloudMsg" class="meta" style="min-height:1rem;"></div>
     </section>
 
     <!-- BUSCA -->

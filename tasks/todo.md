@@ -74,3 +74,41 @@ Decisão do usuário (2026-06-18): escopo **Híbrido** + histórico **salvo no a
   exportar/importar JSON. Margem de erro usa matriculados como população (proxy).
 - **Próximos passos:** commit/push e deploy (GitHub Pages do repo gestec-seedf)
   dependem de confirmação do usuário — o remoto não é deste usuário.
+
+---
+
+## Revisão — Sync obrigatória + BI protegido por credencial (2026-06-18)
+
+**Decisões do usuário:** sync automática/obrigatória; offline = salvar+fila+reenvio
+automático (nunca bloqueia); login do BI lembrado por aparelho (com "Sair").
+
+**Restrição decisiva:** repositório é **público** → senha client-side ou CSV público
+seriam teatro. Solução: leitura do BI passa a ser **autenticada por token no Apps Script**
+(segredo só na conta da gestão), substituindo o CSV.
+
+**Mudanças:**
+- `google-apps-script/Code.gs`: `doPost` com `action:'read'` valida `READ_TOKEN` e devolve
+  os testes em JSON; escrita inalterada (dedupe por id, aberta).
+- `nuvem.js`: URL de envio embutida; token em localStorage (`getToken/verifyToken/logout`);
+  leitura autenticada via POST cors (token no corpo, não na URL); nuvem vira fonte padrão
+  do BI; gate (`applyGate`) e auto-pull ao abrir a tela.
+- `inteligencia.js`: `render()` **default-deny** — sem módulo de credencial ou sem login,
+  não renderiza nada.
+- `index.html` (#inteligencia): `#biGate` (senha) + `#biContent` (BI); seção de sync
+  simplificada (Atualizar nuvem / Reenviar pendentes / Sair). Campos de URL removidos.
+- `GUIA-NUVEM.md`: novo fluxo (sem CSV; senha no Apps Script; login no BI).
+
+**Evidências (verificação local, chrome-devtools):**
+- `node --check` OK em nuvem/inteligencia/registro; console sem erros.
+- Gate fechado por padrão: gate visível, conteúdo oculto, **0 dados renderizados**.
+- Login (fetch mockado, 2 testes): gate oculto, conteúdo visível, indicadores e rankings
+  corretos, status "Sincronização automática ativa · Nuvem (2 testes…)".
+- Logout: token apagado, volta ao gate, modo local.
+
+**Riscos residuais:** envio aberto (URL pública) permite POST de linha falsa (mitigado por
+dedupe; validação estrutural opcional). Token em localStorage → "Sair" limpa. Bloco
+"diagnóstico atual" também fica atrás do login (ajuste fácil se quiserem abri-lo).
+
+**Pendente (só o usuário faz):** colar `Code.gs` no Apps Script, definir `READ_TOKEN`,
+implantar **Nova versão**. Só então o teste ponta-a-ponta da **leitura** roda contra o
+endpoint real (a verificação acima cobre todo o front-end). Apagar a linha `TESTE_NAVEGADOR`.
