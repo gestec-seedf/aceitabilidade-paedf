@@ -1,6 +1,7 @@
 // ===== Registro de Resultados =====
 (function () {
   const STORAGE_KEY = 'aceitabilidade_registro_v1';
+  const HISTORY_KEY = 'aceitabilidade_historico_v1';
   const $ = s => document.querySelector(s);
   const list = $('#turmasList');
   const tmpl = $('#tmplTurma');
@@ -63,6 +64,25 @@
     const aceitos = t.adorei + t.gostei;
     const aceitacao = pct(aceitos, partic);
     return { partic, adesao, aceitos, aceitacao };
+  }
+
+  // consolida os totais de uma lista de turmas + métricas derivadas (fonte única)
+  function consolidate(turmas) {
+    const tot = turmas.reduce((a, t) => {
+      const c = calcTurma(t);
+      a.matric += t.matric; a.pres += t.pres; a.partic += c.partic;
+      a.adorei += t.adorei; a.gostei += t.gostei; a.indif += t.indif;
+      a.naogostei += t.naogostei; a.detestei += t.detestei;
+      return a;
+    }, {matric:0,pres:0,partic:0,adorei:0,gostei:0,indif:0,naogostei:0,detestei:0});
+    tot.aceitos = tot.adorei + tot.gostei;
+    tot.rejeitados = tot.naogostei + tot.detestei;
+    tot.aceitacao = pct(tot.aceitos, tot.partic);
+    tot.passou = tot.aceitacao >= 85;
+    const adM = adesaoMediaTurmas(turmas);
+    tot.adesaoMedia = adM.media;
+    tot.qtdTurmasValidas = adM.qtd;
+    return tot;
   }
 
   function renderTurmaResumo(el, t) {
@@ -240,8 +260,86 @@
     } catch (e) { return false; }
   }
 
+  // ===== histórico (testes salvos no aparelho) =====
+  function getHistory() {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch (e) { return []; }
+  }
+  function setHistory(arr) {
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(arr)); return true; }
+    catch (e) { return false; }
+  }
+
+  // snapshot congelado de um teste finalizado (totais já calculados)
+  function buildSnapshot() {
+    const { header, turmas } = readAll();
+    const tot = consolidate(turmas);
+    return {
+      id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      savedAt: new Date().toISOString(),
+      header: { ...header },
+      totals: {
+        matric: tot.matric, pres: tot.pres, partic: tot.partic,
+        adorei: tot.adorei, gostei: tot.gostei, indif: tot.indif,
+        naogostei: tot.naogostei, detestei: tot.detestei
+      },
+      aceitacao: +tot.aceitacao.toFixed(1),
+      adesaoMedia: +tot.adesaoMedia.toFixed(1),
+      passou: tot.passou,
+      turmas: turmas.map(t => {
+        const c = calcTurma(t);
+        return { nome: t.nome, matric: t.matric, pres: t.pres,
+          adorei: t.adorei, gostei: t.gostei, indif: t.indif,
+          naogostei: t.naogostei, detestei: t.detestei,
+          partic: c.partic, adesao: +c.adesao.toFixed(1), aceitacao: +c.aceitacao.toFixed(1) };
+      })
+    };
+  }
+
+  function saveToHistory() {
+    const { header, turmas } = readAll();
+    const tot = consolidate(turmas);
+    if (tot.partic === 0) {
+      showMsg('Preencha ao menos uma turma com respostas antes de salvar.', 'err');
+      return;
+    }
+    const snap = buildSnapshot();
+    const hist = getHistory();
+    // mesma escola + preparação + data → oferece substituir
+    const dupIdx = hist.findIndex(h =>
+      (h.header.escola || '') === (snap.header.escola || '') &&
+      (h.header.preparacao || '') === (snap.header.preparacao || '') &&
+      (h.header.data || '') === (snap.header.data || ''));
+    if (dupIdx >= 0) {
+      if (confirm('Já existe um teste salvo desta escola/preparação/data. Substituir?')) {
+        hist[dupIdx] = snap;
+      } else {
+        hist.push(snap);
+      }
+    } else {
+      hist.push(snap);
+    }
+    if (setHistory(hist)) {
+      showMsg(`Teste salvo no histórico (${hist.length} no total).`, 'ok');
+      // envia para a nuvem se a sincronização estiver configurada (opcional)
+      if (window.PAENuvem && window.PAENuvem.isConfigured()) {
+        window.PAENuvem.sendSnapshot(snap).then(r => {
+          if (r.queued) showMsg('Salvo localmente · envio à nuvem pendente (sem conexão).', 'ok');
+          else if (r.ok) showMsg('Salvo no histórico e enviado para a nuvem.', 'ok');
+        });
+      }
+    } else {
+      showMsg('Não foi possível salvar (armazenamento cheio?).', 'err');
+    }
+  }
+
   // ===== ações =====
   $('#addTurma').addEventListener('click', () => { addTurma(); saveDraft(); });
+  const saveHistBtn = $('#saveHistory');
+  if (saveHistBtn) saveHistBtn.addEventListener('click', saveToHistory);
   cab.addEventListener('input', () => { saveDraftDebounced(); });
 
   $('#clearAll').addEventListener('click', () => {
@@ -581,6 +679,18 @@
     w.document.open(); w.document.write(html); w.document.close();
     showMsg('Janela de impressão aberta — escolha "Salvar como PDF".', 'ok');
   });
+
+  // ===== API pública (consumida por inteligencia.js — sem duplicar lógica) =====
+  window.PAEReg = {
+    readAll,            // estado atual do formulário { header, turmas }
+    calcTurma,          // métricas de uma turma
+    consolidate,        // totais + métricas derivadas de uma lista de turmas
+    classifyAdesao,     // classificação de adesão (Alta/Média/Baixa/Muito baixa)
+    adesaoMediaTurmas,  // média das adesões das turmas com presentes > 0
+    getHistory,         // array de testes salvos
+    setHistory,         // grava o array de testes (usado por importar/remover)
+    fmt                 // formatação "00,0%"
+  };
 
   // ===== inicialização =====
   if (!loadDraft()) addTurma();

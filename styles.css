@@ -554,6 +554,40 @@ main { max-width: 720px; margin: 0 auto; padding: .9rem .8rem 1.5rem; }
   .actions { grid-template-columns: repeat(5, 1fr); }
 }
 
+/* ==== INTELIGÊNCIA ==== */
+.intel-h { font-size: .98rem; margin: 1.1rem 0 .4rem; color: var(--green); }
+[data-theme="dark"] .intel-h { color: #5fd49a; }
+.intel-bars { display: grid; gap: .55rem; }
+.bar { display: grid; gap: .25rem; }
+.bar__top { display: flex; justify-content: space-between; gap: .5rem; font-size: .82rem; }
+.bar__top span:last-child { color: var(--muted); white-space: nowrap; }
+.bartrack {
+  position: relative; height: 14px; border-radius: 7px;
+  background: var(--line); overflow: hidden;
+}
+.bartrack__fill { height: 100%; border-radius: 7px; transition: width .25s ease; }
+.bartrack__fill.ok { background: var(--green-2); }
+.bartrack__fill.fail { background: var(--red); }
+.bartrack__fill.neutral { background: #9ca3af; }
+.bartrack--cut85::after {
+  content: ''; position: absolute; top: -2px; bottom: -2px; left: 85%;
+  width: 2px; background: var(--text); opacity: .45;
+}
+/* veredito por linha nas tabelas do painel */
+#intelHistorico .resumo__tbl td.ok,
+#intelAtual .ok { color: var(--ok); font-weight: 600; }
+#intelHistorico .resumo__tbl td.fail,
+#intelAtual .fail { color: var(--red); font-weight: 600; }
+#intelHistorico .resumo__tbl td:nth-child(2),
+#intelHistorico .resumo__tbl td:nth-child(3) { text-align: right; }
+.intel-list { list-style: none; padding: 0; display: grid; gap: .4rem; }
+.intel-list li {
+  display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 10px; padding: .5rem .7rem;
+}
+.intel-list li small { display: block; color: var(--muted); font-size: .76rem; margin-top: .1rem; }
+
 /* ==== FOOTER ==== */
 .foot {
   text-align: center; padding: 1.2rem .8rem;

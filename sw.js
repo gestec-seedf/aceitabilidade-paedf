@@ -1,10 +1,13 @@
-const CACHE = 'aceitabilidade-v5';
+const CACHE = 'aceitabilidade-v8';
 const ASSETS = [
   './',
   './index.html',
   './styles.css',
   './app.js',
   './registro.js',
+  './inteligencia.js',
+  './relatorios.js',
+  './nuvem.js',
   './lib/xlsx.full.min.js',
   './manifest.json',
   './icons/icon-192.svg',

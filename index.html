@@ -104,6 +104,11 @@
           <div class="card__t">Planilha de Resultados</div>
           <div class="card__s">Preencher e exportar (XLSX, PDF, CSV)</div>
         </a>
+        <a class="card card--blue card--wide" href="#" data-view="inteligencia" style="grid-column: span 2">
+          <div class="card__icon">📈</div>
+          <div class="card__t">Inteligência</div>
+          <div class="card__s">Diagnóstico do teste e histórico (rankings, tendências)</div>
+        </a>
       </div>
 
       <h2 class="section-h">Calculadoras</h2>
@@ -511,12 +516,14 @@
 
       <h3>Ações</h3>
       <div class="actions">
+        <button type="button" class="btn btn--add" id="saveHistory">💾 Salvar no histórico</button>
         <button type="button" class="btn" id="exportXlsx">📊 Excel (.xlsx)</button>
         <button type="button" class="btn" id="exportPdf">📄 PDF / Imprimir</button>
         <button type="button" class="btn" id="exportCsv">📋 CSV</button>
         <button type="button" class="btn btn--ghost" id="copyResumo">📌 Copiar resumo</button>
         <button type="button" class="btn btn--ghost" id="clearAll">🗑️ Limpar tudo</button>
       </div>
+      <p class="meta" style="margin-top:.4rem">Salvar no histórico guarda este teste neste aparelho para análises na tela <a href="#" data-view="inteligencia">Inteligência</a>.</p>
       <div id="actionMsg" class="meta" style="margin-top:.5rem; min-height:1rem;"></div>
     </section>
 
@@ -547,6 +554,51 @@
       </div>
     </template>
 
+    <!-- INTELIGÊNCIA -->
+    <section class="view" id="inteligencia" data-title="Inteligência" hidden>
+      <h2>Painel de Inteligência</h2>
+      <p>Análise dos dados do questionário: diagnóstico do teste em edição e histórico dos testes salvos neste aparelho. Nada sai do dispositivo.</p>
+
+      <h3>Diagnóstico do teste atual</h3>
+      <div id="intelAtual" class="resumo"></div>
+
+      <h3>Histórico de testes</h3>
+      <div id="intelHistorico" class="resumo"></div>
+
+      <h3>Relatório consolidado</h3>
+      <p class="meta">Gera um relatório com todos os testes salvos (indicadores, ranking, por escola e reprovadas).</p>
+      <div class="actions">
+        <button type="button" class="btn" id="repPdf">📄 PDF</button>
+        <button type="button" class="btn" id="repXlsx">📊 Excel</button>
+        <button type="button" class="btn" id="repDocx">📝 Word</button>
+        <button type="button" class="btn" id="repOdt">📃 ODT</button>
+      </div>
+
+      <h3>Gerenciar histórico</h3>
+      <div class="actions">
+        <button type="button" class="btn" id="exportHist">⬇️ Exportar (JSON)</button>
+        <button type="button" class="btn" id="importHistBtn">⬆️ Importar (JSON)</button>
+        <button type="button" class="btn btn--ghost" id="clearHist">🗑️ Limpar histórico</button>
+        <input type="file" id="importHistFile" accept="application/json,.json" hidden />
+      </div>
+      <div id="intelMsg" class="meta" style="margin-top:.5rem; min-height:1rem;"></div>
+
+      <h3>Sincronização com a nuvem (opcional)</h3>
+      <p class="meta">Permite reunir os testes de várias nutricionistas em uma Planilha Google central e ver o painel/relatórios de <b>todas as escolas</b>. Sem preencher, o app funciona 100% local. Configuração: veja <b>GUIA-NUVEM.md</b>.</p>
+      <div class="form-grid">
+        <label class="field"><span>URL do Web App (envio)</span><input type="url" id="cloudWriteUrl" placeholder="https://script.google.com/macros/s/.../exec" /></label>
+        <label class="field"><span>URL CSV publicada (leitura)</span><input type="url" id="cloudReadUrl" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" /></label>
+      </div>
+      <div class="actions">
+        <button type="button" class="btn btn--add" id="cloudSave">💾 Salvar configuração</button>
+        <button type="button" class="btn" id="cloudPull">☁️ Ver dados da nuvem</button>
+        <button type="button" class="btn btn--ghost" id="cloudLocal">📱 Ver dados locais</button>
+        <button type="button" class="btn btn--ghost" id="cloudFlush">🔄 Reenviar pendentes</button>
+      </div>
+      <div id="cloudStatus" class="meta" style="margin-top:.5rem"></div>
+      <div id="cloudMsg" class="meta" style="min-height:1rem;"></div>
+    </section>
+
     <!-- BUSCA -->
     <section class="view" id="searchView" data-title="Busca" hidden>
       <h2>Resultados</h2>
@@ -561,6 +613,9 @@
 
   <script src="lib/xlsx.full.min.js" defer></script>
   <script src="registro.js" defer></script>
+  <script src="inteligencia.js" defer></script>
+  <script src="relatorios.js" defer></script>
+  <script src="nuvem.js" defer></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

@@ -75,7 +75,8 @@ const searchIndex = [
   { id:'calc-aceitacao', t:'Calculadora — Aceitação', kw:['calculadora','aceitação','85%','gostei adorei','escala hedônica']},
   { id:'calc-resto', t:'Calculadora — Resto-Ingestão', kw:['calculadora','resto','90%','peso']},
   { id:'calc-adesao',t:'Calculadora — Adesão', kw:['calculadora','adesão','adesao','classificação','70%']},
-  { id:'calc-amostra',t:'Calculadora — Amostra', kw:['calculadora','amostra','tamanho','estratificada','nt 3/2022','100 a 500']}
+  { id:'calc-amostra',t:'Calculadora — Amostra', kw:['calculadora','amostra','tamanho','estratificada','nt 3/2022','100 a 500']},
+  { id:'inteligencia',t:'Inteligência', kw:['inteligência','inteligencia','painel','dashboard','diagnóstico','diagnostico','histórico','historico','ranking','tendência','tendencia','evolução','evolucao','indicadores','score sensorial','margem de erro','reformulação','reformulacao','comparativo','por escola','aprovados']}
 ];
 
 function runSearch(q) {
