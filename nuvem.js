@@ -7,11 +7,21 @@
   const QUEUE_KEY = 'aceitabilidade_fila_sync_v1';
   const $ = s => document.querySelector(s);
 
+  // Padrões da gestão: já apontam para a planilha central, então qualquer aparelho
+  // que abrir o app envia automaticamente, sem ninguém precisar colar nada.
+  // Para apontar para outra base, basta salvar URLs diferentes na tela de Sincronização
+  // (o que ficar salvo no aparelho sobrescreve estes padrões; campo vazio salvo = desliga).
+  const DEFAULTS = {
+    writeUrl: 'https://script.google.com/macros/s/AKfycbxiIBLabWyREf0XVKw0aew-BHDV5zkp7D6mdqMq9Melf5cdsiN9qvzcWQNpxbwRcXL6/exec',
+    readUrl: ''
+  };
+
   const state = { mode: 'local', remote: [] };
 
   // ---------- config ----------
   function getCfg() {
-    try { return JSON.parse(localStorage.getItem(CFG_KEY)) || {}; } catch (e) { return {}; }
+    try { return Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem(CFG_KEY)) || {}); }
+    catch (e) { return Object.assign({}, DEFAULTS); }
   }
   function setCfg(cfg) {
     try { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); return true; } catch (e) { return false; }
