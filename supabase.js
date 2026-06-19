@@ -14,8 +14,13 @@
   const QUEUE_KEY = 'aceitabilidade_fila_sync_v1';
   const $ = s => document.querySelector(s);
 
+  // cache:'no-store' em todo fetch → a leitura do BI nunca vem do cache do navegador
+  // (senão o painel mostra testes desatualizados e "Atualizar" não traz o novo).
   const sb = (window.supabase && SUPABASE_URL)
-    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { persistSession: false } })
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+        auth: { persistSession: false },
+        global: { fetch: (url, opts = {}) => fetch(url, { ...opts, cache: 'no-store' }) }
+      })
     : null;
 
   const state = { mode: 'local', remote: [], pulling: false };

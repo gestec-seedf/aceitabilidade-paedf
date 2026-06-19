@@ -18,6 +18,26 @@
   depois `reload` com `ignoreCache`. Bump do nome do cache no `sw.js` ajuda em produção,
   mas no teste local force a limpeza.
 
+## 2026-06-19 — supabase-js sem cache:'no-store' → BI mostra dados velhos
+- **Erro:** após migrar para `supabase-js`, a leitura do painel vinha do **cache HTTP do
+  navegador** — mostrava testes já apagados; "Atualizar dados da nuvem" não trazia o novo.
+  O `nuvem.js` antigo tinha `cache:'no-store'` e eu perdi isso na troca.
+- **Causa raiz:** `createClient` usa o `fetch` global sem desabilitar cache; respostas GET
+  ficavam cacheadas (servidor era `CF-Cache-Status: DYNAMIC`, ou seja, o cache era do browser).
+- **Regra:** ao usar `supabase-js` para dados que mudam, injetar fetch sem cache:
+  `createClient(url, key, { global: { fetch: (u,o={}) => fetch(u, {...o, cache:'no-store'}) } })`.
+- **Detecção:** comparar a resposta do **curl** (sem cache do browser) com a do app. Se o
+  curl traz o dado novo e o app não, é cache do navegador.
+
+## 2026-06-19 — Verificar gráfico com DADOS VARIADOS, não com 1 ponto
+- **Erro:** validei os gráficos com 1 só teste → o gráfico de "Evolução por data" parecia ok,
+  mas estava **semanticamente errado**: ligava testes de preparações/escolas diferentes numa
+  linha, duplicava datas iguais e usava eixo categórico (intervalos desiguais apareciam iguais).
+- **Causa raiz:** com 1 ponto não dá para ver agregação, duplicatas nem espaçamento temporal.
+- **Regra:** testar gráfico/agregação com **dados que cobrem os casos** (várias datas, datas
+  repetidas, intervalos diferentes). Para série temporal: agregar por data (1 ponto/dia) e usar
+  **eixo de tempo proporcional** (`type:'linear'` + x = timestamp), nunca eixo categórico de strings.
+
 ## 2026-06-19 — Verificar pelo caminho real (papel anon), não como superusuário
 - **Acerto a manter:** validei o RLS/segurança via **REST com a anon key** (papel `anon`),
   não via psycopg2 (que conecta como `postgres` e ignora RLS). Só assim o teste prova que
