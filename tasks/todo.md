@@ -215,3 +215,70 @@ aberta na planilha) sem reintroduzir fricção de senha.
 - **Próximos passos (pendente confirmação do usuário):** commit/push ao
   `gestec-seedf/aceitabilidade-paedf` (deploy em produção via GitHub Pages); rotacionar
   senha do banco; habilitar GitHub Actions.
+
+---
+
+# Plano — Salvamento automático no banco (auto-save na nuvem) — 2026-06-19
+
+## Objetivo
+Gravar cada teste na nuvem **sem depender do clique em "Salvar no histórico"**, com
+**id estável** (nunca duplica) e mantendo o BI limpo (só testes finalizados contam).
+
+## Decisões (confirmadas com o usuário)
+- Gatilho: auto-save com **debounce (~1,5s)** assim que há dados válidos (`partic > 0`).
+- Identidade: **id estável por sessão de formulário** (não aleatório a cada save).
+  Rotaciona em **"Limpar tudo"** e quando, num teste já finalizado, a identidade do
+  cabeçalho (escola|preparação|data) muda → começa teste novo sem sobrescrever o anterior.
+- BI: rascunhos vão pra nuvem mas **só `status='final'` aparece no painel**.
+
+## Itens
+- [x] `supabase/schema.sql`: coluna `status` (default `'final'`, check), índice, RPC grava status.
+- [x] `supabase.js`: `fetchRemote` filtra `status='final'`; `rowToSnap` carrega status;
+      `enqueue` **substitui por id** (offline não perde updates do mesmo rascunho).
+- [x] `registro.js`: id estável (`getDraftId`/`rotateDraftId`), meta `{finalized, identity}`,
+      `buildSnapshot(status)`, `autoSync`/`autoSyncDebounced`, ganchos nos inputs, finalize, limpar.
+- [x] `sw.js`: bump `v9` → `v10`.
+- [x] Verificação: `node --check` OK; schema rodado em Postgres real (Docker) provando o fluxo.
+
+## Critérios de aceitação
+1. Digitar um teste válido → linha `status='rascunho'` na nuvem **sem clicar em Salvar**.
+2. Editar de novo o mesmo teste → **mesma linha** atualizada (sem duplicar).
+3. BI/relatórios **não** mostram o rascunho; ao "Salvar", vira `final` e aparece.
+4. Offline: rascunho vai pra fila e sobe ao reconectar (sem duplicar).
+5. "Limpar tudo" / trocar escola num teste finalizado → próximo teste é linha nova.
+
+## Revisão (final — 2026-06-19)
+- **Resultado:** auto-save na nuvem implementado. Edição → `autoSync` (debounce 1,5s) faz
+  upsert de `status='rascunho'` via `submit_teste`; "Salvar" finaliza (`'final'`). Id **estável**
+  por sessão (`aceitabilidade_draft_id_v1`) → nunca duplica. BI lê só `status='final'`.
+- **Evidências (Postgres real via Docker, rodando o `schema.sql` de verdade):**
+  - schema aplica limpo e **idempotente** (2x, EXIT=0).
+  - RPC: `rascunho`/`final`/sem-status(→`final`) gravam certo; filtro `status='final'`
+    esconde o rascunho; **upsert por id mantém 1 linha** (rascunho→final, total não muda);
+    validação ainda barra soma(20)>presentes(5); CHECK rejeita status inválido.
+  - **Migração prod:** tabela antiga **sem** a coluna → ALTER adiciona `status` defaultando
+    registros existentes como `final` → continuam visíveis no BI (sem perda/quebra).
+  - `node --check` OK em registro/supabase/sw.
+  - Estado do banco de produção confirmado por REST anon: coluna `status` **ainda não existe**
+    (`42703`) → ordem de deploy é pré-requisito.
+- **MIGRAÇÃO APLICADA EM PRODUÇÃO (2026-06-19):** `schema.sql` rodado no Supabase via pooler
+  session (5432). Coluna `status` + índice + RPC atualizada criados (EXIT=0).
+- **E2E pelo caminho real (REST anon na produção):**
+  - coluna `status` agora existe (antes dava `42703`).
+  - `submit_teste` com `status:'rascunho'` → 204; **BI (`status=eq.final`) não mostra** (`[]`);
+    linha existe como rascunho.
+  - finalizar (mesmo id, `status:'final'`) → 204; aparece no BI; **1 linha só** (upsert não duplicou).
+  - linha de verificação **removida** (pooler); produção voltou a 0 linhas (limpa).
+- **E2E no NAVEGADOR REAL (localhost → Supabase produção, 2026-06-19):** todos os comportamentos
+  exercitados disparando eventos `input` reais:
+  1. teste vazio (partic=0) → **nenhuma linha** criada (guard).
+  2. preencher respostas → auto-save `rascunho` **sem clicar**; id do cliente = id na nuvem;
+     **oculto no BI** (`status=eq.final` → []).
+  3. editar um número → **mesma linha** atualizada (partic 9→10), **sem duplicar**.
+  4. clicar "Salvar" → mesmo id vira `final`, 1 linha, **visível no BI** (aceitação 90%).
+  5. trocar a escola num teste finalizado → **id rotaciona**; o finalizado fica intacto e o
+     novo vira rascunho separado (2 linhas distintas). Sem sobrescrever.
+  - Linhas de verificação removidas (pooler); produção em 0 linhas.
+- **Riscos residuais:** rascunhos acumulam linhas ocultas na nuvem (anon não deleta) — aceitável;
+  se incomodar, criar limpeza periódica de rascunhos antigos. Senha do banco trafegou no chat →
+  rotacionar ao fim (app usa só a anon key, rotação não quebra nada).

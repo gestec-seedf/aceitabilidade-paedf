@@ -1,4 +1,4 @@
-const CACHE = 'aceitabilidade-v9';
+const CACHE = 'aceitabilidade-v10';
 const ASSETS = [
   './',
   './index.html',

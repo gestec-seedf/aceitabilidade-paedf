@@ -31,8 +31,12 @@
   function getQueue() { try { return JSON.parse(localStorage.getItem(QUEUE_KEY)) || []; } catch (e) { return []; } }
   function setQueue(q) { try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch (e) {} }
   function enqueue(snap) {
+    // Substitui por id (não apenas ignora): com id estável, um rascunho editado offline
+    // várias vezes deve subir na versão mais recente, não na primeira enfileirada.
     const q = getQueue();
-    if (!q.some(s => s.id === snap.id)) { q.push(snap); setQueue(q); }
+    const i = q.findIndex(s => s.id === snap.id);
+    if (i >= 0) q[i] = snap; else q.push(snap);
+    setQueue(q);
   }
 
   // ---------- escrita (RPC validada) ----------
@@ -78,12 +82,16 @@
       aceitacao: +r.aceitacao || 0,
       adesaoMedia: +r.adesao_media || 0,
       passou: !!r.passou,
-      turmas: Array.isArray(r.turmas) ? r.turmas : []
+      turmas: Array.isArray(r.turmas) ? r.turmas : [],
+      status: r.status || 'final'
     };
   }
+  // BI lê SÓ testes finalizados. Rascunhos (auto-save em edição) ficam na nuvem para não
+  // se perder, mas não entram em rankings/tendências até o usuário clicar em "Salvar".
   async function fetchRemote() {
     if (!sb) throw new Error('Supabase não configurado.');
-    const { data, error } = await sb.from('testes').select('*').order('saved_at', { ascending: true });
+    const { data, error } = await sb.from('testes').select('*')
+      .eq('status', 'final').order('saved_at', { ascending: true });
     if (error) throw new Error(error.message);
     return (data || []).map(rowToSnap);
   }

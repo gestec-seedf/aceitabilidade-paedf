@@ -2,6 +2,8 @@
 (function () {
   const STORAGE_KEY = 'aceitabilidade_registro_v1';
   const HISTORY_KEY = 'aceitabilidade_historico_v1';
+  const DRAFT_ID_KEY = 'aceitabilidade_draft_id_v1';   // id estável do teste em edição
+  const DRAFT_META_KEY = 'aceitabilidade_draft_meta_v1'; // { finalized, identity }
   const $ = s => document.querySelector(s);
   const list = $('#turmasList');
   const tmpl = $('#tmplTurma');
@@ -245,6 +247,7 @@
   function saveDraftDebounced() { clearTimeout(saveTO); saveTO = setTimeout(saveDraft, 400); }
   function saveDraft() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(readAll())); } catch (e) {}
+    autoSyncDebounced(); // todo caminho de edição passa por aqui → auto-save na nuvem
   }
   function loadDraft() {
     try {
@@ -273,12 +276,49 @@
     catch (e) { return false; }
   }
 
-  // snapshot congelado de um teste finalizado (totais já calculados)
-  function buildSnapshot() {
+  // ===== identidade estável do teste em edição =====
+  // Um id por "sessão de formulário": auto-save e finalização usam o MESMO id → a nuvem
+  // faz upsert na mesma linha (nunca duplica). Rotaciona ao limpar tudo ou ao começar um
+  // teste novo (mudança de escola/preparação/data num teste já finalizado).
+  function newId() { return 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+  function getDraftId() {
+    let v = '';
+    try { v = localStorage.getItem(DRAFT_ID_KEY) || ''; } catch (e) {}
+    if (!v) { v = newId(); try { localStorage.setItem(DRAFT_ID_KEY, v); } catch (e) {} }
+    return v;
+  }
+  function getMeta() { try { return JSON.parse(localStorage.getItem(DRAFT_META_KEY)) || {}; } catch (e) { return {}; } }
+  function setMeta(m) { try { localStorage.setItem(DRAFT_META_KEY, JSON.stringify(m)); } catch (e) {} }
+  function isFinalized() { return !!getMeta().finalized; }
+  function rotateDraftId() {
+    try { localStorage.setItem(DRAFT_ID_KEY, newId()); } catch (e) {}
+    setMeta({ finalized: false, identity: '' });
+  }
+  // identidade de domínio do teste (o que distingue um teste de outro)
+  function identityNow() {
+    const { header } = readAll();
+    return [header.escola || '', header.preparacao || '', header.data || ''].join('|');
+  }
+
+  // ===== auto-save na nuvem =====
+  // Dispara com debounce após qualquer edição. Só envia quando há dados reais (partic>0),
+  // como 'rascunho' (oculto no BI) ou 'final' se o teste já foi finalizado (mantém correções).
+  let syncTO;
+  function autoSyncDebounced() { clearTimeout(syncTO); syncTO = setTimeout(autoSync, 1500); }
+  function autoSync() {
+    if (!(window.PAENuvem && window.PAENuvem.isConfigured())) return;
+    const { turmas } = readAll();
+    if (consolidate(turmas).partic === 0) return; // não polui a nuvem com teste vazio
+    window.PAENuvem.sendSnapshot(buildSnapshot(isFinalized() ? 'final' : 'rascunho'));
+  }
+
+  // snapshot congelado de um teste (totais já calculados). status: 'rascunho' | 'final'.
+  function buildSnapshot(status) {
     const { header, turmas } = readAll();
     const tot = consolidate(turmas);
     return {
-      id: 's_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+      id: getDraftId(),
+      status: status || 'final',
       savedAt: new Date().toISOString(),
       header: { ...header },
       totals: {
@@ -306,25 +346,34 @@
       showMsg('Preencha ao menos uma turma com respostas antes de salvar.', 'err');
       return;
     }
-    const snap = buildSnapshot();
+    const snap = buildSnapshot('final');
     const hist = getHistory();
-    // mesma escola + preparação + data → oferece substituir
-    const dupIdx = hist.findIndex(h =>
-      (h.header.escola || '') === (snap.header.escola || '') &&
-      (h.header.preparacao || '') === (snap.header.preparacao || '') &&
-      (h.header.data || '') === (snap.header.data || ''));
-    if (dupIdx >= 0) {
-      if (confirm('Já existe um teste salvo desta escola/preparação/data. Substituir?')) {
-        hist[dupIdx] = snap;
+    // mesmo id (este teste já estava no histórico) → atualiza no lugar, sem perguntar.
+    const idIdx = hist.findIndex(h => h.id === snap.id);
+    if (idIdx >= 0) {
+      hist[idIdx] = snap;
+    } else {
+      // mesma escola + preparação + data → oferece substituir
+      const dupIdx = hist.findIndex(h =>
+        (h.header.escola || '') === (snap.header.escola || '') &&
+        (h.header.preparacao || '') === (snap.header.preparacao || '') &&
+        (h.header.data || '') === (snap.header.data || ''));
+      if (dupIdx >= 0) {
+        if (confirm('Já existe um teste salvo desta escola/preparação/data. Substituir?')) {
+          hist[dupIdx] = snap;
+        } else {
+          hist.push(snap);
+        }
       } else {
         hist.push(snap);
       }
-    } else {
-      hist.push(snap);
     }
     if (setHistory(hist)) {
+      // marca como finalizado: auto-saves seguintes mantêm 'final' (correções), e a troca
+      // de identidade do cabeçalho passa a iniciar um teste novo (ver listener do #formCabecalho).
+      setMeta({ finalized: true, identity: identityNow() });
       showMsg(`Teste salvo no histórico (${hist.length} no total).`, 'ok');
-      // envia para a nuvem se a sincronização estiver configurada (opcional)
+      // envia para a nuvem se a sincronização estiver configurada
       if (window.PAENuvem && window.PAENuvem.isConfigured()) {
         window.PAENuvem.sendSnapshot(snap).then(r => {
           if (r.queued) showMsg('Salvo localmente · envio à nuvem pendente (sem conexão).', 'ok');
@@ -340,13 +389,20 @@
   $('#addTurma').addEventListener('click', () => { addTurma(); saveDraft(); });
   const saveHistBtn = $('#saveHistory');
   if (saveHistBtn) saveHistBtn.addEventListener('click', saveToHistory);
-  cab.addEventListener('input', () => { saveDraftDebounced(); });
+  cab.addEventListener('input', () => {
+    // Se o teste já foi finalizado e o usuário muda a identidade (escola/preparação/data),
+    // ele está começando OUTRO teste no mesmo formulário → rotaciona o id para não
+    // sobrescrever o teste anterior já salvo na nuvem.
+    if (isFinalized() && identityNow() !== (getMeta().identity || '')) rotateDraftId();
+    saveDraftDebounced();
+  });
 
   $('#clearAll').addEventListener('click', () => {
     if (!confirm('Apagar todos os dados? Esta ação não pode ser desfeita.')) return;
     cab.reset();
     list.innerHTML = '';
     localStorage.removeItem(STORAGE_KEY);
+    rotateDraftId(); // próximo teste é uma linha nova na nuvem (não sobrescreve o anterior)
     renderResumo();
     addTurma();
     showMsg('Dados apagados.', 'ok');

@@ -30,11 +30,21 @@ create table if not exists public.testes (
   aceitacao     numeric default 0 check (aceitacao between 0 and 100),
   adesao_media  numeric default 0 check (adesao_media between 0 and 100),
   passou        boolean default false,
-  turmas        jsonb            -- detalhe por turma (preservado; o Sheets descartava)
+  turmas        jsonb,           -- detalhe por turma (preservado; o Sheets descartava)
+  status        text not null default 'final'  -- 'rascunho' (auto-save) | 'final' (BI conta só este)
 );
+
+-- Migração idempotente para bancos já criados antes da coluna status existir.
+alter table public.testes add column if not exists status text not null default 'final';
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'testes_status_chk') then
+    alter table public.testes add constraint testes_status_chk check (status in ('rascunho','final'));
+  end if;
+end $$;
 
 create index if not exists testes_data_idx   on public.testes (data);
 create index if not exists testes_escola_idx  on public.testes (escola);
+create index if not exists testes_status_idx  on public.testes (status);
 
 -- ---------- RLS: leitura pública, escrita bloqueada (só via RPC) ----------
 alter table public.testes enable row level security;
@@ -69,9 +79,15 @@ declare
   v_soma   int;
   v_aceit  numeric := coalesce((payload->>'aceitacao')::numeric, 0);
   v_ades   numeric := coalesce((payload->>'adesaoMedia')::numeric, 0);
+  -- status: 'rascunho' = auto-save em edição (oculto no BI); 'final' = teste concluído.
+  -- Ausente no payload (compat. retroativa) → 'final'. Valor inesperado → 'final'.
+  v_status text   := coalesce(nullif(payload->>'status',''), 'final');
 begin
   if v_id is null then
     raise exception 'id obrigatorio';
+  end if;
+  if v_status not in ('rascunho','final') then
+    v_status := 'final';
   end if;
   if v_matric<0 or v_pres<0 or v_part<0 or v_ado<0 or v_gos<0 or v_ind<0 or v_ng<0 or v_det<0 then
     raise exception 'contagens negativas nao permitidas';
@@ -87,14 +103,14 @@ begin
   insert into public.testes (
     id, saved_at, regional, escola, programa, preparacao, data, aplicador,
     matriculados, presentes, participantes, adorei, gostei, indiferente,
-    naogostei, detestei, aceitacao, adesao_media, passou, turmas
+    naogostei, detestei, aceitacao, adesao_media, passou, turmas, status
   ) values (
     v_id,
     coalesce(nullif(payload->>'savedAt','')::timestamptz, now()),
     h->>'regional', h->>'escola', h->>'programa', h->>'preparacao', h->>'data', h->>'aplicador',
     v_matric, v_pres, v_part, v_ado, v_gos, v_ind, v_ng, v_det,
     v_aceit, v_ades, coalesce((payload->>'passou')::boolean, false),
-    payload->'turmas'
+    payload->'turmas', v_status
   )
   on conflict (id) do update set
     saved_at      = excluded.saved_at,
@@ -115,7 +131,8 @@ begin
     aceitacao     = excluded.aceitacao,
     adesao_media  = excluded.adesao_media,
     passou        = excluded.passou,
-    turmas        = excluded.turmas;
+    turmas        = excluded.turmas,
+    status        = excluded.status;
 end;
 $$;
 

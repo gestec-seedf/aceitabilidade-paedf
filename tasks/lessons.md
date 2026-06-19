@@ -43,3 +43,18 @@
   não via psycopg2 (que conecta como `postgres` e ignora RLS). Só assim o teste prova que
   o app real está protegido (INSERT direto deu 42501; RPC validou). Conexão postgres serve
   para DDL/limpeza, não para validar políticas de acesso.
+
+## 2026-06-19 — Filtro de leitura que depende de coluna nova = migração ANTES do frontend
+- **Risco identificado (antes de quebrar):** ao adicionar auto-save com `status`
+  ('rascunho'/'final'), o `fetchRemote` passou a filtrar `.eq('status','final')`. O banco de
+  produção ainda **não** tinha a coluna → REST devolveu `42703 column testes.status does not
+  exist`. Se o frontend subisse antes do SQL, o **BI inteiro quebraria** (read lança erro).
+- **Regra:** quando uma mudança de frontend passa a depender de coluna/RPC novos, a **migração
+  idempotente (`schema.sql`) roda PRIMEIRO**, depois publica o frontend. Verificar o estado real
+  do banco por REST anon (`select=...,coluna`) antes de assumir que a coluna existe.
+- **Detecção barata:** `curl .../rest/v1/testes?select=id,status&limit=1` com a anon key —
+  se vier `42703`, a migração ainda não foi aplicada.
+- **Design correlato:** id **estável** por sessão de formulário (não aleatório a cada save) é o
+  que permite auto-save sem duplicar — upsert por id cai sempre na mesma linha. Rotacionar o id
+  só ao "Limpar tudo" ou quando a identidade (escola|preparação|data) de um teste já finalizado
+  muda (= começou outro teste no mesmo formulário).
