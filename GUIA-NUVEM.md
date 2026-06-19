@@ -1,3 +1,7 @@
+> ⚠️ **LEGADO (não usar).** O backend migrou para o **Supabase** — veja
+> [`GUIA-SUPABASE.md`](GUIA-SUPABASE.md). Este guia e o `google-apps-script/Code.gs`
+> ficam só como referência histórica.
+
 # Guia — Sincronização com a Nuvem (Planilha Google)
 
 Reúne os testes preenchidos por **várias nutricionistas, em aparelhos diferentes**, em uma

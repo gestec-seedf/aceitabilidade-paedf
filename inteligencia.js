@@ -298,16 +298,25 @@
     `;
   }
 
-  // ---------- render geral ----------
-  function render() {
-    // Gate de credencial (default-deny): sem o módulo de credencial carregado, ou sem
-    // login, o BI não exibe nenhum dado. nuvem.js mostra o formulário de senha.
-    if (!window.PAENuvem || !window.PAENuvem.isAuthed()) {
-      if (window.PAENuvem) window.PAENuvem.applyGate();
-      return;
+  // ---------- gráficos (delega para graficos.js / Chart.js) ----------
+  function renderCharts() {
+    if (!window.PAEGraficos) return;
+    const A = api();
+    if (A) {
+      const { turmas } = A.readAll();
+      const tot = A.consolidate(turmas);
+      if (tot.partic > 0) window.PAEGraficos.renderDistribuicao(tot);
     }
+    const ag = aggregate(activeHistory());
+    window.PAEGraficos.renderTendencia(ag.evol || []);
+    window.PAEGraficos.renderEscolas(ag.escolas || []);
+  }
+
+  // ---------- render geral (BI aberto — sem gate de senha) ----------
+  function render() {
     try { renderAtual(); } catch (e) { elAtual.innerHTML = '<p class="muted">Erro ao montar diagnóstico.</p>'; }
     try { renderHistorico(); } catch (e) { elHist.innerHTML = '<p class="muted">Erro ao montar histórico.</p>'; }
+    try { renderCharts(); } catch (e) {}
   }
 
   // ---------- gerência do histórico ----------
@@ -374,7 +383,7 @@
     showMsg('Teste removido.', 'ok');
   });
 
-  // ---------- API pública (consumida por relatorios.js e nuvem.js) ----------
+  // ---------- API pública (consumida por relatorios.js e supabase.js) ----------
   window.PAEIntel = { aggregate, fmt, esc, render };
 
   // ---------- re-render sempre que a tela ficar visível ----------

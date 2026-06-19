@@ -558,30 +558,26 @@
     <section class="view" id="inteligencia" data-title="Inteligência" hidden>
       <h2>Painel de Inteligência</h2>
 
-      <!-- GATE: acesso restrito por credencial -->
-      <div id="biGate" hidden>
-        <div class="result warn">
-          <b>🔒 Acesso restrito</b>
-          <div class="meta">O painel reúne os dados consolidados de todas as escolas. Informe a credencial da gestão para acessar.</div>
-        </div>
-        <div class="form-grid">
-          <label class="field"><span>Senha de acesso</span><input type="password" id="biPass" autocomplete="current-password" placeholder="credencial da gestão" /></label>
-        </div>
-        <div class="actions">
-          <button type="button" class="btn btn--add" id="biEnter">🔓 Entrar</button>
-        </div>
-        <div id="biGateMsg" class="meta" style="min-height:1rem;"></div>
-      </div>
-
-      <!-- CONTEÚDO: visível apenas após login -->
-      <div id="biContent" hidden>
+      <div id="biContent">
         <p>Análise consolidada dos testes de aceitabilidade de <b>todas as escolas</b> que sincronizam, mais o diagnóstico do teste em edição neste aparelho.</p>
 
         <h3>Diagnóstico do teste atual</h3>
         <div id="intelAtual" class="resumo"></div>
+        <div class="chart-card">
+          <h4 class="intel-h">Distribuição das respostas (teste atual)</h4>
+          <div class="chart-box"><canvas id="chartDist"></canvas></div>
+        </div>
 
         <h3>Histórico de testes</h3>
         <div id="intelHistorico" class="resumo"></div>
+        <div class="chart-card">
+          <h4 class="intel-h">Evolução da aceitação por data</h4>
+          <div class="chart-box"><canvas id="chartTrend"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h4 class="intel-h">Aceitação média por escola</h4>
+          <div class="chart-box"><canvas id="chartEscolas"></canvas></div>
+        </div>
 
         <h3>Relatório consolidado</h3>
         <p class="meta">Gera um relatório com todos os testes salvos (indicadores, ranking, por escola e reprovadas).</p>
@@ -606,7 +602,6 @@
         <div class="actions">
           <button type="button" class="btn" id="cloudPull">🔄 Atualizar dados da nuvem</button>
           <button type="button" class="btn btn--ghost" id="cloudFlush">🔄 Reenviar pendentes</button>
-          <button type="button" class="btn btn--ghost" id="biLogout">🚪 Sair</button>
         </div>
         <div id="cloudStatus" class="meta" style="margin-top:.5rem"></div>
         <div id="cloudMsg" class="meta" style="min-height:1rem;"></div>
@@ -626,10 +621,13 @@
   </footer>
 
   <script src="lib/xlsx.full.min.js" defer></script>
+  <script src="lib/chart.umd.js" defer></script>
+  <script src="lib/supabase.js" defer></script>
   <script src="registro.js" defer></script>
+  <script src="graficos.js" defer></script>
   <script src="inteligencia.js" defer></script>
   <script src="relatorios.js" defer></script>
-  <script src="nuvem.js" defer></script>
+  <script src="supabase.js" defer></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

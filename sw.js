@@ -1,4 +1,4 @@
-const CACHE = 'aceitabilidade-v8';
+const CACHE = 'aceitabilidade-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -6,9 +6,12 @@ const ASSETS = [
   './app.js',
   './registro.js',
   './inteligencia.js',
+  './graficos.js',
   './relatorios.js',
-  './nuvem.js',
+  './supabase.js',
   './lib/xlsx.full.min.js',
+  './lib/chart.umd.js',
+  './lib/supabase.js',
   './manifest.json',
   './icons/icon-192.svg',
   './icons/icon-512.svg',

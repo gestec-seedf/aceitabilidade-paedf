@@ -112,3 +112,106 @@ dedupe; validação estrutural opcional). Token em localStorage → "Sair" limpa
 **Pendente (só o usuário faz):** colar `Code.gs` no Apps Script, definir `READ_TOKEN`,
 implantar **Nova versão**. Só então o teste ponta-a-ponta da **leitura** roda contra o
 endpoint real (a verificação acima cobre todo o front-end). Apagar a linha `TESTE_NAVEGADOR`.
+
+---
+
+# Plano — Migração Supabase + BI aberto + Gráficos (2026-06-19)
+
+> Decisões do usuário: (1) migrar Google Sheets → **Supabase**; (2) **remover a senha**
+> do painel de Inteligência (leitura pública); (3) implementar **gráficos** junto.
+
+## Objetivo
+Painel de inteligência **aberto e visual** para as nutricionistas otimizarem o cardápio,
+sobre backend **robusto** (Postgres/Supabase) que corrige a fraqueza atual (escrita 100%
+aberta na planilha) sem reintroduzir fricção de senha.
+
+## Arquitetura alvo
+
+### Backend (Supabase / Postgres)
+- Tabela `testes` (colunas = snapshot atual).
+- **Escrita endurecida**: RPC `submit_teste(payload jsonb)` `SECURITY DEFINER` que valida
+  faixas (contagens ≥ 0, soma respostas ≤ presentes, aceitação 0–100) e faz **upsert por
+  id**. Anon recebe **EXECUTE só nessa função** — sem INSERT/UPDATE/DELETE direto na
+  tabela. Resolve estruturalmente a poluição de dados.
+- **Leitura pública** (BI sem senha): RLS `SELECT using (true)` para `anon`.
+- `anon public key` + URL embutidos no app (públicos por design; RLS protege).
+- Ganho: escrita deixa de ser `no-cors` opaca → o app **sabe** se gravou.
+
+### Frontend (continua PWA estático, sem build)
+- `lib/supabase.js` + `lib/chart.umd.js` vendorizados (offline-first como o xlsx).
+- `nuvem.js` → reescrito como `supabase.js`, **mantendo o nome global `window.PAENuvem`**
+  e a superfície (`getActiveHistory`, `getMode`, `sendSnapshot`, `flush`, `isConfigured`)
+  p/ não quebrar `inteligencia.js`/`relatorios.js`. Mantém **fila offline**; flush via RPC.
+  Remove token/login/logout/verifyToken/gate.
+- `inteligencia.js`: `render()` sem bloqueio de auth — sempre Bloco A (local) + Bloco B
+  (consolidado público). Preserva `PAEIntel.aggregate/fmt`.
+- `graficos.js` (novo, Chart.js tematizado por CSS vars): distribuição (doughnut),
+  tendência de aceitação por data (line, corte 85%), comparativo por preparação/escola (bar).
+- `index.html`: remove UI do gate (#biGate/#biPass/#biEnter/#biLogout); adiciona canvases;
+  injeta config Supabase (URL + anon key).
+- `sw.js`: cache v9 — troca `nuvem.js`→`supabase.js`, adiciona libs e `graficos.js`.
+
+### Legado / migração
+- `Code.gs` + `GUIA-NUVEM.md` viram legado (fonte da migração). Novo `GUIA-SUPABASE.md`
+  com SQL (schema + RLS + RPC) e passo-a-passo. Migração one-time dos testes da planilha.
+
+## Etapas
+1. [ ] SQL Supabase: schema + CHECK + RLS (select público) + RPC `submit_teste` + grants.
+2. [ ] Vendorizar `lib/supabase.js` e `lib/chart.umd.js`.
+3. [ ] Reescrever `nuvem.js` → `supabase.js`.
+4. [ ] Ajustar `inteligencia.js` (remover gate).
+5. [ ] `graficos.js` + canvases; remover UI de senha no `index.html`.
+6. [ ] `sw.js` (v9) + `<script>` no `index.html`.
+7. [ ] `GUIA-SUPABASE.md`; marcar `Code.gs`/`GUIA-NUVEM.md` legado.
+8. [ ] Migração de dados existentes (se houver).
+9. [ ] Verificação + commit/push.
+
+## Critérios de aceitação
+- [ ] Salvar online → linha no Supabase via RPC; reabrir → dedupe por id.
+- [ ] Offline: salvar → fila; reconectar → flush grava.
+- [ ] Painel abre **sem senha**: diagnóstico local + consolidado de todas as escolas.
+- [ ] Gráficos renderizam e batem com as tabelas.
+- [ ] `relatorios.js` segue exportando (PDF/XLSX/DOCX/ODT).
+- [ ] RLS: `anon` não faz UPDATE/DELETE direto; só RPC + SELECT.
+- [ ] `submit_teste` rejeita payload inválido (soma respostas > presentes).
+
+## Riscos
+- **Free tier pausa após ~1 semana inativo** → BI/sync caem até acordar. Mitigação:
+  keep-alive diário, aceitar atraso, ou plano pago.
+- `anon key` pública: ok; integridade via RLS + validação na RPC.
+- Bundle offline (supabase-js + Chart.js) — vendorizar e cachear no SW.
+- LGPD: dado agregado; "aplicador" é o único campo pessoal — avaliar exibir/omitir no BI.
+
+## Preciso de você (bloqueadores)
+1. Criar projeto Supabase → me passar **Project URL** + **anon public key** (ou placeholders).
+2. Rodar o **SQL** que eu gerar.
+3. Há **dados reais** na planilha atual a migrar? (sim/não)
+4. Ciente do **risco de pausa do free tier**? Keep-alive ou aceita o atraso?
+
+## Revisão (final — 2026-06-19)
+- **Resultado:** Migração concluída e verificada. Backend agora é **Supabase**
+  (projeto `rjtnzrnbadoxixdxgwpl`, sa-east-1). Schema aplicado por mim via pooler
+  (`supabase/schema.sql`). BI **aberto** (gate removido). **Gráficos** (Chart.js) no painel.
+  - Novos: `supabase.js` (substitui `nuvem.js`), `graficos.js`, `lib/supabase.js`,
+    `lib/chart.umd.js`, `supabase/schema.sql`, `GUIA-SUPABASE.md`,
+    `.github/workflows/keepalive.yml`. Removido: `nuvem.js`.
+  - Editados: `index.html` (sem gate, +canvases, +scripts), `inteligencia.js`
+    (sem gate, +renderCharts), `styles.css` (.chart-card/.chart-box), `sw.js` (v9).
+  - Legado marcado: `Code.gs`, `GUIA-NUVEM.md`.
+- **Evidências:**
+  - SQL aplicado: "SCHEMA APPLIED OK". `node --check` OK em 7 arquivos JS.
+  - REST (papel anon): escrita RPC 204; leitura pública OK (turmas jsonb preservado);
+    INSERT direto **bloqueado pelo RLS** (42501); dado inválido **rejeitado** pela RPC
+    ("soma das respostas (20) maior que presentes (5)"); keepalive "ok".
+  - Chrome (localhost:8765): após limpar SW v8 obsoleto — libs carregadas, `PAENuvem`
+    sem chaves de gate, `hasGate:false`, 3 canvases presentes, **console sem erros**.
+    `sendSnapshot` E2E → {ok:true}; painel abre sem senha (mode=nuvem, "1 testes");
+    gráficos trend+escolas renderizados; dist confirmado com dados de amostra.
+  - Linhas de teste limpas do Supabase (0 ao final). Sem vazamento da senha do banco
+    em arquivos versionados.
+- **Riscos residuais:** free tier pode pausar (mitigado por keep-alive, requer Actions
+  habilitado). Senha do banco foi compartilhada no chat → **usuário deve rotacionar**.
+  `aplicador` (dado pessoal) fica visível no BI público — avaliar omitir se necessário.
+- **Próximos passos (pendente confirmação do usuário):** commit/push ao
+  `gestec-seedf/aceitabilidade-paedf` (deploy em produção via GitHub Pages); rotacionar
+  senha do banco; habilitar GitHub Actions.

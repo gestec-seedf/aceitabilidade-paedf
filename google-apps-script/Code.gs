@@ -1,4 +1,7 @@
 /**
+ * ⚠️ LEGADO — não usar. O backend migrou para o Supabase (ver GUIA-SUPABASE.md e
+ * supabase/schema.sql). Mantido apenas como referência histórica.
+ *
  * Aceitabilidade PAE-DF — endpoint serverless (Google Apps Script).
  *
  * ESCRITA (aberta): doPost com um snapshot grava/atualiza uma linha na aba "Testes".
