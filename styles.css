@@ -385,6 +385,8 @@ main { max-width: 720px; margin: 0 auto; padding: .9rem .8rem 1.5rem; }
   color: var(--text); padding: .2rem 0; width: 100%;
 }
 .btn--small { padding: .35rem .7rem; font-size: .82rem; flex: 0 0 auto; }
+/* botão de exclusão "armado" (área do gestor): 2º clique confirma */
+[data-del-cloud].is-armed { color: #fff; background: var(--red); border-color: var(--red); font-weight: 600; }
 
 #turmasList { display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 1rem; }
 .turma {

@@ -120,24 +120,49 @@
 
   if (btnAtual) btnAtual.addEventListener('click', loadList);
 
-  // exclusão (delegação) — dois confirmes, pois é definitivo
+  // exclusão (delegação) — confirmação NA PÁGINA (não usa confirm() nativo, que o
+  // navegador pode suprimir após o 1º diálogo / extensões podem interceptar):
+  // 1º clique arma o botão ("Confirmar exclusão"); 2º clique em até 4s apaga.
+  let armedId = null, armTimer = null;
+  function disarm() {
+    if (armTimer) { clearTimeout(armTimer); armTimer = null; }
+    armedId = null;
+    if (!lista) return;
+    const b = lista.querySelector('[data-del-cloud].is-armed');
+    if (b) { b.classList.remove('is-armed'); b.textContent = 'Excluir'; }
+  }
   if (lista) {
     lista.addEventListener('click', async (e) => {
       const btn = e.target.closest('[data-del-cloud]');
       if (!btn) return;
       const id = btn.getAttribute('data-del-cloud');
-      if (!confirm('Excluir este teste da nuvem? A ação é DEFINITIVA e vale para todas as escolas.')) return;
-      if (!confirm('Confirme novamente: apagar permanentemente este teste?')) return;
+
+      // 1º clique: arma este botão e desarma qualquer outro
+      if (armedId !== id) {
+        disarm();
+        armedId = id;
+        btn.classList.add('is-armed');
+        btn.textContent = 'Confirmar exclusão';
+        armTimer = setTimeout(disarm, 4000);
+        setMsg(panelMsg, 'Clique de novo em "Confirmar exclusão" para apagar definitivamente.', 'err');
+        return;
+      }
+
+      // 2º clique: executa
+      if (armTimer) { clearTimeout(armTimer); armTimer = null; }
+      armedId = null;
+      btn.classList.remove('is-armed');
       btn.disabled = true;
+      btn.textContent = 'Excluindo…';
       setMsg(panelMsg, 'Excluindo…');
       const r = await api().deleteTeste(id);
       if (!r.ok) {
         btn.disabled = false;
+        btn.textContent = 'Excluir';
         const motivo = /sem permiss/i.test(r.error || '')
           ? 'Seu e-mail não está autorizado a excluir. Verifique a allowlist da função delete_teste no Supabase (e-mail do gestor).'
           : (r.error || 'erro desconhecido.');
         setMsg(panelMsg, 'Não foi possível excluir: ' + motivo, 'err');
-        alert('Não foi possível excluir.\n\n' + motivo);
         return;
       }
       setMsg(panelMsg, 'Teste excluído.', 'ok');
