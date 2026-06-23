@@ -133,7 +133,11 @@
       const r = await api().deleteTeste(id);
       if (!r.ok) {
         btn.disabled = false;
-        setMsg(panelMsg, 'Não foi possível excluir: ' + (r.error || 'sem permissão.'), 'err');
+        const motivo = /sem permiss/i.test(r.error || '')
+          ? 'Seu e-mail não está autorizado a excluir. Verifique a allowlist da função delete_teste no Supabase (e-mail do gestor).'
+          : (r.error || 'erro desconhecido.');
+        setMsg(panelMsg, 'Não foi possível excluir: ' + motivo, 'err');
+        alert('Não foi possível excluir.\n\n' + motivo);
         return;
       }
       setMsg(panelMsg, 'Teste excluído.', 'ok');
