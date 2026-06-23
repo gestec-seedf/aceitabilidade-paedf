@@ -98,3 +98,12 @@
 - **Validação:** testar `delete_teste` pelo papel **anon** (sem sessão) → deve falhar; com sessão
   fora da allowlist → `sem permissao`. Só o gestor da allowlist apaga. (DDL roda no painel; não
   apliquei no banco de produção — fica nos passos manuais do `GUIA-SUPABASE.md`.)
+- **Bug "não exclui" — `confirm()` nativo é suprimível:** o botão tinha `confirm()` DUPLO. Após o
+  1º diálogo, Chrome/Edge oferece "impedir que esta página crie mais diálogos" e o 2º `confirm()`
+  passa a retornar `false` sozinho → exclusão abortada **em silêncio**, embora o backend
+  retornasse `ok:true` para o gestor. Diagnóstico decisivo: chamar `PAENuvem.deleteTeste(idFake)`
+  no console da sessão logada → veio `{"ok":true}`, isolando o problema no front (o `confirm`).
+- **Regra:** para ações destrutivas, **não confiar em `confirm()`/`alert()` nativos** (o navegador
+  suprime após repetições; extensões interceptam). Usar confirmação **na própria página** (ex.:
+  botão em 2 cliques "Excluir" → "Confirmar exclusão", com timeout de desarme). Determinista e
+  testável via DOM.
