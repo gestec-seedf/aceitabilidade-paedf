@@ -139,6 +139,38 @@ $$;
 -- anon (app público) só pode EXECUTAR a função de escrita e LER a tabela
 grant execute on function public.submit_teste(jsonb) to anon, authenticated;
 
+-- ---------- RPC de exclusão (área do gestor, só autenticado + allowlist) ----------
+-- O app é estático e a anon key é pública; por isso a exclusão é validada NO SERVIDOR:
+--   • exige sessão autenticada (Supabase Auth);
+--   • exige que o e-mail esteja na allowlist abaixo (defesa em profundidade caso o
+--     auto-cadastro do Supabase fique ligado por engano);
+--   • a tabela não tem policy de DELETE para ninguém → só esta função SECURITY DEFINER apaga.
+-- IMPORTANTE: troque o e-mail abaixo pelo da conta de gestor antes de rodar.
+create or replace function public.delete_teste(p_id text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_email  text   := lower(coalesce(auth.jwt() ->> 'email', ''));
+  v_admins text[] := array['suape.alimentacao@gmail.com'];  -- e-mail(s) do(s) gestor(es)
+begin
+  if auth.role() <> 'authenticated' or v_email = '' then
+    raise exception 'nao autenticado';
+  end if;
+  if not (v_email = any(v_admins)) then
+    raise exception 'sem permissao';
+  end if;
+  delete from public.testes where id = p_id;
+end;
+$$;
+
+-- só a sessão autenticada pode executar (anon, NÃO)
+revoke all on function public.delete_teste(text) from public;
+revoke execute on function public.delete_teste(text) from anon;
+grant execute on function public.delete_teste(text) to authenticated;
+
 -- ---------- Health check para o keep-alive (mantém o projeto fora da pausa) ----------
 create or replace function public.keepalive()
 returns text

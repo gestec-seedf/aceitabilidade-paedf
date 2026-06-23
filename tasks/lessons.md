@@ -58,3 +58,43 @@
   que permite auto-save sem duplicar — upsert por id cai sempre na mesma linha. Rotacionar o id
   só ao "Limpar tudo" ou quando a identidade (escola|preparação|data) de um teste já finalizado
   muda (= começou outro teste no mesmo formulário).
+
+## 2026-06-22 — Auditoria: `searchView` invisível e fila offline com perda silenciosa
+- **Bug 1 (busca):** a view `registro` ("Planilha de Resultados") não tinha entrada no
+  `searchIndex` (`app.js`) → buscar "planilha", "exportar", "csv" não achava a principal
+  ferramenta. É exatamente o gotcha do `CLAUDE.md §3` ("searchIndex é manual"). Corrigido
+  adicionando a entrada. **Regra:** ao criar/renomear uma `section.view`, adicionar SEMPRE a
+  entrada no `searchIndex` no mesmo commit; validar buscando um termo da tela.
+- **Bug 2 (offline):** `setQueue` em `supabase.js` engolia `QuotaExceededError` com
+  `catch(e){}` → se o `localStorage` lotasse offline, o teste preenchido sumia sem aviso.
+  Corrigido: `setQueue` retorna bool e avisa via `showMsg(...,'err')`; `enqueue`/`sendSnapshot`
+  propagam o resultado. **Regra:** nunca engolir erro de escrita em `localStorage` quando o
+  dado é a única cópia (fila offline) — sempre dar feedback ao usuário.
+- **Falsos positivos de subagentes (descartados após verificar):** "SSL divide por zero"
+  (já há guarda antes), "adesão deveria ser ponderada" (contradiz o contrato "média das
+  turmas"), "leitura pública é vulnerabilidade" (é design documentado, dados sem PII de aluno),
+  "SW não registrado" (está, com skipWaiting+claim). **Regra:** achado de subagente de auditoria
+  é hipótese, não veredito — confirmar contra o contrato (`CLAUDE.md`/skill de domínio) e o
+  código real antes de "corrigir". Vários "críticos" eram by-design.
+- **Verificação de UI local:** o cache de disco do navegador serviu HTML/JS antigos mesmo após
+  desregistrar SW + limpar `caches` + `ignoreCache`. O que funcionou: abrir aba em
+  **`isolatedContext`** novo (contexto de browser limpo) com query cache-buster. `curl` ao
+  servidor confirma o que está realmente sendo entregue vs. o que o browser executou.
+- **Busca tem debounce de 120ms** (`app.js`): ler `#searchResults` síncrono logo após disparar
+  o evento `input` dá vazio (falso negativo). Em teste automatizado, `await ~220ms` antes de ler.
+
+## 2026-06-23 — Área do gestor: exclusão na nuvem exige auth validada no servidor
+- **Necessidade:** gestores precisavam apagar testes preenchidos indevidamente. O "Remover" do BI
+  só limpa histórico **local**; `anon` não tem DELETE (RLS) → não havia como excluir da nuvem.
+- **Solução:** Supabase Auth (login único compartilhado) + RPC `delete_teste(p_id)`
+  `SECURITY DEFINER` que exige `auth.role()='authenticated'` **e** e-mail numa allowlist, com
+  `grant execute ... to authenticated` (revogado de `anon`). Hard delete. Front em `gestao.js`
+  (IIFE isolada consumindo `window.PAENuvem`), novos métodos no `supabase.js`
+  (signIn/signOut/onAuthChange/fetchAllAdmin/deleteTeste) e `persistSession:true`.
+- **Regra de segurança (causa raiz):** como o app é estático e a anon key é pública, QUALQUER
+  proteção tem de ser no servidor. Atenção ao **auto-cadastro do Supabase** (ligado por padrão):
+  sem desabilitar, qualquer um vira `authenticated`. Por isso a allowlist na RPC é obrigatória
+  (defesa em profundidade), além de desligar signup no painel.
+- **Validação:** testar `delete_teste` pelo papel **anon** (sem sessão) → deve falhar; com sessão
+  fora da allowlist → `sem permissao`. Só o gestor da allowlist apaga. (DDL roda no painel; não
+  apliquei no banco de produção — fica nos passos manuais do `GUIA-SUPABASE.md`.)

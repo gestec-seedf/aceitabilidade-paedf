@@ -40,6 +40,28 @@ não por senha no app.
    - Ele roda sozinho 1×/dia. Para testar agora: Actions → "Supabase keep-alive" →
      **Run workflow**.
 
+## Área do gestor (login + exclusão de testes indevidos)
+
+O app tem uma **Área do gestor** (link discreto no rodapé · `🔒 Área do gestor`) onde, **após
+login**, é possível ver todos os testes da nuvem e **excluí-los definitivamente** — para
+remover registros preenchidos por engano. A exclusão é validada **no servidor**: a função
+`delete_teste()` exige sessão autenticada **e** que o e-mail esteja numa allowlist. O papel
+`anon` (app público) **não** consegue excluir.
+
+Para ativar (uma vez):
+
+1. **Definir o(s) e-mail(s) do gestor na allowlist.** Em [`supabase/schema.sql`](supabase/schema.sql),
+   na função `delete_teste`, troque `'gestor@see.df.gov.br'` pelo e-mail real (pode listar mais
+   de um: `array['a@x','b@x']`). Rode o `schema.sql` inteiro de novo no **SQL Editor** (idempotente).
+2. **Criar a conta de gestor.** Supabase → **Authentication → Users → Add user** → defina e-mail
+   (o mesmo da allowlist) e senha. É a credencial única compartilhada pela equipe DIAE.
+3. **Desligar o auto-cadastro** (importante). Authentication → **Sign In / Providers** (ou
+   Settings) → **desabilite "Allow new users to sign up"**. Assim ninguém cria conta própria
+   com a anon key. (Mesmo que fique ligado, a allowlist da RPC ainda bloqueia quem não for gestor.)
+
+> Trocar a senha do gestor: Authentication → Users → o usuário → **Reset/Update password**.
+> Revogar acesso: remova o e-mail da allowlist no `schema.sql` (e rode de novo) e/ou apague o usuário.
+
 ## Como ver / exportar os dados
 
 - **No app**: tela **Inteligência** → indicadores, rankings, gráficos e relatórios

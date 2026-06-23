@@ -397,16 +397,26 @@
     saveDraftDebounced();
   });
 
-  $('#clearAll').addEventListener('click', () => {
-    if (!confirm('Apagar todos os dados? Esta ação não pode ser desfeita.')) return;
+  // Inicia um teste em branco: limpa o formulário e rotaciona o id (o próximo save é uma
+  // linha nova na nuvem, não sobrescreve o teste anterior). Reaproveitado por "Novo teste"
+  // (home/registro) e por "Limpar tudo".
+  function startNewTest(opts = {}) {
+    const confirmMsg = 'confirmMsg' in opts ? opts.confirmMsg
+      : 'Iniciar um novo teste? Os dados atuais não salvos serão apagados.';
+    const okMsg = opts.okMsg || 'Novo teste iniciado.';
+    if (confirmMsg && !confirm(confirmMsg)) return false;
     cab.reset();
     list.innerHTML = '';
     localStorage.removeItem(STORAGE_KEY);
-    rotateDraftId(); // próximo teste é uma linha nova na nuvem (não sobrescreve o anterior)
+    rotateDraftId();
     renderResumo();
     addTurma();
-    showMsg('Dados apagados.', 'ok');
-  });
+    showMsg(okMsg, 'ok');
+    return true;
+  }
+
+  $('#clearAll').addEventListener('click', () =>
+    startNewTest({ confirmMsg: 'Apagar todos os dados? Esta ação não pode ser desfeita.', okMsg: 'Dados apagados.' }));
 
   // ===== exportações =====
   function fileName(ext) {
@@ -745,6 +755,7 @@
     adesaoMediaTurmas,  // média das adesões das turmas com presentes > 0
     getHistory,         // array de testes salvos
     setHistory,         // grava o array de testes (usado por importar/remover)
+    startNewTest,       // limpa o formulário e rotaciona o id (botão "Novo teste")
     fmt                 // formatação "00,0%"
   };
 

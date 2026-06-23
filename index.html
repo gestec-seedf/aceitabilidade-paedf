@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0b6b3a" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Aceitabilidade" />
@@ -99,6 +100,11 @@
 
       <h2 class="section-h">Registro do teste</h2>
       <div class="cards">
+        <a class="card card--green card--wide" href="#" data-novo-teste style="grid-column: span 2">
+          <div class="card__icon">➕</div>
+          <div class="card__t">Novo teste</div>
+          <div class="card__s">Começar uma planilha em branco</div>
+        </a>
         <a class="card card--magenta card--wide" href="#" data-view="registro" style="grid-column: span 2">
           <div class="card__icon">📝</div>
           <div class="card__t">Planilha de Resultados</div>
@@ -494,6 +500,9 @@
     <section class="view" id="registro" data-title="Planilha de Resultados" hidden>
       <h2>Registro de Resultados do Teste</h2>
       <p>Preencha os dados do teste. O app calcula tudo automaticamente e exporta nos formatos abaixo. O rascunho é salvo no celular automaticamente.</p>
+      <div class="addturma-wrap" style="margin:.2rem 0 .8rem">
+        <button type="button" class="btn btn--add" data-novo-teste>➕ Novo teste</button>
+      </div>
 
       <h3>Cabeçalho</h3>
       <form class="form-grid" id="formCabecalho" autocomplete="off">
@@ -531,22 +540,22 @@
     <template id="tmplTurma">
       <div class="turma" data-turma>
         <div class="turma__head">
-          <input type="text" class="turma__nome" placeholder="Nome da turma (ex.: 6º A)" />
+          <input type="text" class="turma__nome" name="nome" placeholder="Nome da turma (ex.: 6º A)" />
           <button type="button" class="turma__del" aria-label="Remover turma">✕</button>
         </div>
         <div class="turma__body">
           <div class="grid2">
-            <label class="field"><span>Matriculados</span><input type="number" min="0" step="1" data-f="matric" /></label>
-            <label class="field"><span>Presentes</span><input type="number" min="0" step="1" data-f="pres" /></label>
+            <label class="field"><span>Matriculados</span><input type="number" min="0" step="1" name="matric" data-f="matric" /></label>
+            <label class="field"><span>Presentes</span><input type="number" min="0" step="1" name="pres" data-f="pres" /></label>
           </div>
           <h4>Escala Hedônica</h4>
           <p class="hf__hint">Preencha a contagem de fichas em cada categoria. A soma não pode ultrapassar o número de <b>presentes</b>.</p>
           <div class="hedonic-form">
-            <label class="hf hf--ok"><span class="face">😍</span><span class="hf__t">Adorei</span><input type="number" min="0" step="1" inputmode="numeric" data-f="adorei" value="0" /></label>
-            <label class="hf hf--ok"><span class="face">🙂</span><span class="hf__t">Gostei</span><input type="number" min="0" step="1" inputmode="numeric" data-f="gostei" value="0" /></label>
-            <label class="hf"><span class="face">😐</span><span class="hf__t">Indiferente</span><input type="number" min="0" step="1" inputmode="numeric" data-f="indif" value="0" /></label>
-            <label class="hf"><span class="face">🙁</span><span class="hf__t">Não gostei</span><input type="number" min="0" step="1" inputmode="numeric" data-f="naogostei" value="0" /></label>
-            <label class="hf"><span class="face">😖</span><span class="hf__t">Detestei</span><input type="number" min="0" step="1" inputmode="numeric" data-f="detestei" value="0" /></label>
+            <label class="hf hf--ok"><span class="face">😍</span><span class="hf__t">Adorei</span><input type="number" min="0" step="1" inputmode="numeric" name="adorei" data-f="adorei" value="0" /></label>
+            <label class="hf hf--ok"><span class="face">🙂</span><span class="hf__t">Gostei</span><input type="number" min="0" step="1" inputmode="numeric" name="gostei" data-f="gostei" value="0" /></label>
+            <label class="hf"><span class="face">😐</span><span class="hf__t">Indiferente</span><input type="number" min="0" step="1" inputmode="numeric" name="indif" data-f="indif" value="0" /></label>
+            <label class="hf"><span class="face">🙁</span><span class="hf__t">Não gostei</span><input type="number" min="0" step="1" inputmode="numeric" name="naogostei" data-f="naogostei" value="0" /></label>
+            <label class="hf"><span class="face">😖</span><span class="hf__t">Detestei</span><input type="number" min="0" step="1" inputmode="numeric" name="detestei" data-f="detestei" value="0" /></label>
           </div>
           <p class="hf__warn" data-warn hidden></p>
           <div class="turma__resumo" data-turma-resumo></div>
@@ -608,6 +617,37 @@
       </div>
     </section>
 
+    <!-- ÁREA DO GESTOR -->
+    <section class="view" id="gestao" data-title="Área do gestor" hidden>
+      <h2>Área do gestor</h2>
+
+      <!-- estado: deslogado -->
+      <div id="gestaoLogin">
+        <p>Acesso restrito à equipe DIAE. Entre para revisar e excluir testes enviados à nuvem.</p>
+        <form id="gestaoLoginForm" class="form-grid" autocomplete="on" style="max-width:420px">
+          <label class="field"><span>E-mail</span><input type="email" name="email" id="gestaoEmail" autocomplete="username" required /></label>
+          <label class="field"><span>Senha</span><input type="password" name="password" id="gestaoSenha" autocomplete="current-password" required /></label>
+          <button type="submit" class="btn btn--add" id="gestaoEntrar">Entrar</button>
+        </form>
+        <div id="gestaoLoginMsg" class="meta" style="margin-top:.5rem; min-height:1rem"></div>
+      </div>
+
+      <!-- estado: logado -->
+      <div id="gestaoPanel" hidden>
+        <div class="result fail" style="margin-bottom:.8rem">
+          <b>⚠️ Exclusão definitiva</b>
+          <div class="meta">Apagar um teste aqui o remove permanentemente da nuvem, para todas as escolas. Não há como desfazer.</div>
+        </div>
+        <div class="actions" style="margin-bottom:.6rem">
+          <span class="meta" id="gestaoUser" style="flex:1 1 auto; align-self:center"></span>
+          <button type="button" class="btn btn--ghost btn--small" id="gestaoAtualizar">↻ Atualizar</button>
+          <button type="button" class="btn btn--ghost btn--small" id="gestaoSair">Sair</button>
+        </div>
+        <div id="gestaoLista" class="result"></div>
+        <div id="gestaoPanelMsg" class="meta" style="margin-top:.5rem; min-height:1rem"></div>
+      </div>
+    </section>
+
     <!-- BUSCA -->
     <section class="view" id="searchView" data-title="Busca" hidden>
       <h2>Resultados</h2>
@@ -618,6 +658,7 @@
 
   <footer class="foot">
     <small>Boletim Alimentação · 24ª ed · 06/2026 · Gerência de Supervisão Técnica e Educação Alimentar e Nutricional — DIAE/SEE-DF</small>
+    <small style="display:block; margin-top:.5rem"><a href="#" data-view="gestao" style="color:inherit; opacity:.65; text-decoration:underline">🔒 Área do gestor</a></small>
   </footer>
 
   <script src="lib/xlsx.full.min.js" defer></script>
@@ -628,6 +669,7 @@
   <script src="inteligencia.js" defer></script>
   <script src="relatorios.js" defer></script>
   <script src="supabase.js" defer></script>
+  <script src="gestao.js" defer></script>
   <script src="app.js"></script>
   <script>
     if ('serviceWorker' in navigator) {

@@ -18,7 +18,9 @@
   // (senão o painel mostra testes desatualizados e "Atualizar" não traz o novo).
   const sb = (window.supabase && SUPABASE_URL)
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-        auth: { persistSession: false },
+        // persistSession: mantém o gestor logado entre cargas (área do gestor).
+        // A leitura pública do BI funciona igual com ou sem sessão (RLS libera anon e authenticated).
+        auth: { persistSession: true, autoRefreshToken: true },
         global: { fetch: (url, opts = {}) => fetch(url, { ...opts, cache: 'no-store' }) }
       })
     : null;
@@ -29,14 +31,23 @@
 
   // ---------- fila offline ----------
   function getQueue() { try { return JSON.parse(localStorage.getItem(QUEUE_KEY)) || []; } catch (e) { return []; } }
-  function setQueue(q) { try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); } catch (e) {} }
+  // Retorna true se gravou; false se o armazenamento recusou (cota cheia etc.).
+  // Falha silenciosa aqui significaria perder um teste preenchido offline — então avisamos.
+  function setQueue(q) {
+    try { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); return true; }
+    catch (e) {
+      console.error('Fila offline não pôde ser gravada:', e && e.name);
+      showMsg('Armazenamento local cheio — não foi possível guardar o teste para envio. Sincronize ou libere espaço.', 'err');
+      return false;
+    }
+  }
   function enqueue(snap) {
     // Substitui por id (não apenas ignora): com id estável, um rascunho editado offline
     // várias vezes deve subir na versão mais recente, não na primeira enfileirada.
     const q = getQueue();
     const i = q.findIndex(s => s.id === snap.id);
     if (i >= 0) q[i] = snap; else q.push(snap);
-    setQueue(q);
+    return setQueue(q);
   }
 
   // ---------- escrita (RPC validada) ----------
@@ -51,7 +62,7 @@
   async function sendSnapshot(snap) {
     if (!sb) return { ok: false, queued: false };
     const ok = await trySend(snap);
-    if (!ok) { enqueue(snap); return { ok: false, queued: true }; }
+    if (!ok) { const queued = enqueue(snap); return { ok: false, queued }; }
     return { ok: true, queued: false };
   }
   async function flush() {
@@ -94,6 +105,36 @@
       .eq('status', 'final').order('saved_at', { ascending: true });
     if (error) throw new Error(error.message);
     return (data || []).map(rowToSnap);
+  }
+
+  // ---------- área do gestor: auth + leitura completa + exclusão ----------
+  async function signIn(email, password) {
+    if (!sb) return { ok: false, error: 'Nuvem não configurada.' };
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    return error ? { ok: false, error: error.message } : { ok: true, user: data.user };
+  }
+  async function signOut() { if (sb) { try { await sb.auth.signOut(); } catch (e) {} } }
+  async function getUser() {
+    if (!sb) return null;
+    const { data } = await sb.auth.getSession();
+    return data && data.session ? data.session.user : null;
+  }
+  function onAuthChange(cb) {
+    if (!sb) return;
+    sb.auth.onAuthStateChange((_evt, session) => cb(session ? session.user : null));
+  }
+  // Leitura para o gestor: TODOS os testes (inclusive rascunhos), mais recentes primeiro.
+  async function fetchAllAdmin() {
+    if (!sb) throw new Error('Supabase não configurado.');
+    const { data, error } = await sb.from('testes').select('*').order('saved_at', { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data || []).map(rowToSnap);
+  }
+  // Exclusão definitiva via RPC validada no servidor (auth + allowlist).
+  async function deleteTeste(id) {
+    if (!sb) return { ok: false, error: 'Nuvem não configurada.' };
+    const { error } = await sb.rpc('delete_teste', { p_id: id });
+    return error ? { ok: false, error: error.message } : { ok: true };
   }
 
   // ---------- fonte de dados ativa ----------
@@ -164,7 +205,9 @@
   window.PAENuvem = {
     isConfigured,
     sendSnapshot, flush,
-    fetchRemote, getActiveHistory, getMode: () => state.mode
+    fetchRemote, getActiveHistory, getMode: () => state.mode,
+    // área do gestor
+    signIn, signOut, getUser, onAuthChange, fetchAllAdmin, deleteTeste
   };
 
   // ---------- boot ----------

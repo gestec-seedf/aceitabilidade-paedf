@@ -46,6 +46,7 @@
   // margem de erro (proporção) com correção para população finita
   function marginOfError(pPct, n, N) {
     if (!(n > 0)) return null;
+    if (N > 0 && n > N) return null; // amostra > população é inconsistente: não estima margem
     const p = Math.min(1, Math.max(0, pPct / 100));
     let e = Z95 * Math.sqrt((p * (1 - p)) / n);
     if (N > n && N > 1) e *= Math.sqrt((N - n) / (N - 1)); // correção finita

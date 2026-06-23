@@ -23,6 +23,13 @@ function showView(id, push = true) {
 }
 
 document.addEventListener('click', (e) => {
+  const novo = e.target.closest('[data-novo-teste]');
+  if (novo) {
+    e.preventDefault();
+    showView('registro');
+    if (window.PAEReg && window.PAEReg.startNewTest) window.PAEReg.startNewTest();
+    return;
+  }
   const a = e.target.closest('[data-view]');
   if (a) {
     e.preventDefault();
@@ -76,6 +83,8 @@ const searchIndex = [
   { id:'calc-resto', t:'Calculadora — Resto-Ingestão', kw:['calculadora','resto','90%','peso']},
   { id:'calc-adesao',t:'Calculadora — Adesão', kw:['calculadora','adesão','adesao','classificação','70%']},
   { id:'calc-amostra',t:'Calculadora — Amostra', kw:['calculadora','amostra','tamanho','estratificada','nt 3/2022','100 a 500']},
+  { id:'registro',   t:'Planilha de Resultados', kw:['planilha','registro','registrar','resultados','turmas','consolidar','consolidado','exportar','exportacao','exportação','csv','xlsx','excel','pdf','salvar','histórico','historico','novo teste']},
+  { id:'gestao',     t:'Área do gestor', kw:['gestor','gestao','gestão','admin','administrador','login','entrar','excluir','apagar','deletar','moderar','moderação']},
   { id:'inteligencia',t:'Inteligência', kw:['inteligência','inteligencia','painel','dashboard','diagnóstico','diagnostico','histórico','historico','ranking','tendência','tendencia','evolução','evolucao','indicadores','score sensorial','margem de erro','reformulação','reformulacao','comparativo','por escola','aprovados']}
 ];
 
