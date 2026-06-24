@@ -83,6 +83,47 @@
 - **Busca tem debounce de 120ms** (`app.js`): ler `#searchResults` síncrono logo após disparar
   o evento `input` dá vazio (falso negativo). Em teste automatizado, `await ~220ms` antes de ler.
 
+## 2026-06-24 — SW cacheava a API do Supabase cache-first → BI e gestor com dados velhos (CAUSA RAIZ)
+- **Sintoma:** testes recém-preenchidos não apareciam na área do gestor; o BI também não os via.
+- **Diagnóstico (Chrome DevTools):** `curl`/REST direto à API → **4** testes; `PAENuvem.fetchAllAdmin()`
+  no app → **2** (velhos). Inspecionando `caches`, o cache `aceitabilidade-vN` continha as respostas
+  de `/rest/v1/testes?...` (2 itens e 0 itens). Removendo essas entradas, `fetchAllAdmin` voltou a 4.
+- **Causa raiz:** o handler `fetch` do `sw.js` era **cache-first para TODO GET**, sem filtrar origem.
+  Ele interceptava as leituras REST do Supabase (outra origem), guardava a 1ª resposta e a servia
+  para sempre (`if (cached) return cached`, sem revalidar). Isso **fura o `cache:'no-store'`** do
+  supabase-js — o SW responde do Cache Storage antes de chegar à rede.
+- **Por que só apareceu agora:** o `activate` apaga caches de nome != atual, então **cada deploy
+  (bump de versão) limpava as entradas da API por acaso**, mascarando o bug. Quando o usuário
+  passou a adicionar/excluir testes SEM deploy no meio, a leitura velha persistiu e ficou visível.
+  A lição 2026-06-19 (no-store) tratou o cache do browser, mas o cache do SW continuava furando.
+- **Correção:** no `fetch` do SW, `if (new URL(req.url).origin !== self.location.origin) return;`
+  — o SW só trata assets do próprio app; a API passa direto pela rede (no-store volta a valer).
+  Comprovado ao vivo: após excluir as entradas da API do cache, gestor=4 e BI=2 (corretos). Cache → v17.
+- **Regra:** service worker de PWA deve interceptar **apenas mesma origem** (app shell). NUNCA
+  cache-first em chamadas de API de dados que mudam — ou os dados aparecem velhos e "Atualizar"
+  não resolve. Validar leitura comparando **REST direto (sem SW)** vs **app (com SW)**; se divergir,
+  o SW está no caminho. Cache-first puro também nunca revalida em background — preferir, no mínimo,
+  stale-while-revalidate para assets, e network-only para API.
+
+## 2026-06-24 — "Exclusão não funcionou" era cache do SW (assets) + UI antiga ignorando soft delete
+- **Sintoma:** gestor relatou que excluir testes "não deu certo". Hipótese inicial (minha):
+  regressão de permissão ao ler `auth.users` na RPC nova. **Errada.**
+- **Diagnóstico real (Chrome DevTools, sessão logada de verdade):** `PAENuvem.deleteTeste(fake)`
+  → `{ok:true}`; `restoreTeste(fake)` → `{ok:true}`. Backend 100% OK (lookup vivo em
+  `auth.users` funciona em produção). `fetchAllAdmin` mostrou os 2 testes **já soft-deleted**
+  (deletado hoje) e `fetchRemote` (BI) = 0. Ou seja: **as exclusões FUNCIONARAM**.
+- **Causa raiz:** o dispositivo do gestor rodava versão **antiga** (service worker cache-first).
+  A UI antiga não conhece `deleted_at` → após excluir, o `fetchAllAdmin` ainda trazia a linha e
+  ela continuava aparecendo como teste normal → **parecia que não excluiu**, embora o backend
+  tivesse marcado `deleted_at`. Confirmação: na sessão fresca, `window.PAENuvem.signIn` nem
+  existia até limpar SW + caches e recarregar (aí v16 ativou com signIn/deleteTeste/restoreTeste).
+- **Regra:** ao investigar "não funcionou" num PWA com SW, **primeiro confirme a versão que o
+  dispositivo está executando** (a do servidor pode estar certa e o cache servindo a velha).
+  Bug de percepção ≠ bug de backend. Validar o backend pelo caminho real (sessão autenticada no
+  console) antes de "corrigir" o servidor — quase reverti uma RPC que estava correta.
+- **Mitigação p/ usuário:** fechar 100% o app e reabrir (skipWaiting+claim ativa a v16); ou
+  limpar cache. Follow-up possível: aviso "nova versão — recarregar" no app.
+
 ## 2026-06-24 — Confirmação "na página" deve ser desarmada em TODO re-render
 - **Bug (crítico):** a exclusão do gestor usa confirmação em 2 cliques (arma o botão → 2º
   clique apaga), com `armedId`/`armTimer` em memória. Mas `loadList()` recria o `innerHTML`

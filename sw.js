@@ -1,4 +1,4 @@
-const CACHE = 'aceitabilidade-v16';
+const CACHE = 'aceitabilidade-v17';
 const ASSETS = [
   './',
   './index.html',
@@ -36,6 +36,12 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
+  // SÓ intercepta assets do próprio app (mesma origem). Requisições a OUTRA origem —
+  // em especial a API REST do Supabase (leitura do BI e da área do gestor) — passam
+  // direto pela rede. Sem isto, o SW guardava as respostas da API cache-first e servia
+  // dados VELHOS para sempre (BI/gestor não viam testes novos nem exclusões), furando o
+  // cache:'no-store' do supabase-js. Ver tasks/lessons.md (2026-06-24).
+  if (new URL(req.url).origin !== self.location.origin) return;
   e.respondWith(
     caches.match(req).then(cached => {
       if (cached) return cached;
