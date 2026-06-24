@@ -34,6 +34,8 @@
   let lastUser = null;
   function showLoggedOut() {
     lastUser = null;
+    disarm();                          // não deixar exclusão "armada" sobreviver ao logout
+    if (lista) lista.innerHTML = '';   // não vazar a lista de testes para a próxima sessão
     if (elLogin) elLogin.hidden = false;
     if (elPanel) elPanel.hidden = true;
   }
@@ -57,8 +59,14 @@
   }
 
   // ---------- lista de testes da nuvem ----------
+  // Guarda de concorrência: no login, o handler do form e o onAuthChange chamam loadList()
+  // quase juntos; sem isto seriam dois fetchAllAdmin em paralelo (flicker + resposta velha
+  // podendo sobrescrever a mais nova). Também dedupe cliques repetidos em "Atualizar".
+  let loading = false;
   async function loadList() {
-    if (!lista) return;
+    if (!lista || loading) return;
+    loading = true;
+    disarm();                          // re-render zera qualquer exclusão "armada" (ver disarm)
     lista.innerHTML = '<div class="meta">Carregando testes da nuvem…</div>';
     setMsg(panelMsg, '');
     try {
@@ -67,6 +75,8 @@
     } catch (e) {
       lista.innerHTML = '<div class="meta">Não foi possível carregar.</div>';
       setMsg(panelMsg, 'Erro ao carregar: ' + (e && e.message ? e.message : e), 'err');
+    } finally {
+      loading = false;
     }
   }
 

@@ -83,6 +83,29 @@
 - **Busca tem debounce de 120ms** (`app.js`): ler `#searchResults` síncrono logo após disparar
   o evento `input` dá vazio (falso negativo). Em teste automatizado, `await ~220ms` antes de ler.
 
+## 2026-06-24 — Confirmação "na página" deve ser desarmada em TODO re-render
+- **Bug (crítico):** a exclusão do gestor usa confirmação em 2 cliques (arma o botão → 2º
+  clique apaga), com `armedId`/`armTimer` em memória. Mas `loadList()` recria o `innerHTML`
+  da lista sem chamar `disarm()`. Cenário: armar o botão do teste X → clicar "↻ Atualizar"
+  (ou o re-render pós-exclusão / `onAuthChange`) → o botão de X volta visualmente para
+  "Excluir", mas `armedId` ainda é "X" → o **próximo clique apaga sem o 2º clique de
+  confirmação**. A confirmação na página (que substituiu o `confirm()` nativo suprimível,
+  ver lição 2026-06-23) tinha esse furo.
+- **Causa raiz:** estado de "armado" vive fora do DOM; ao destruir/recriar o DOM, o estado
+  não foi reconciliado. Confirmação na página só é determinística se for **resetada junto
+  com cada re-render** (e no logout).
+- **Regra:** todo fluxo de confirmação stateful na UI deve chamar `disarm()`/reset no início
+  de qualquer função que recrie o container (`loadList`) e em transições de sessão
+  (`showLoggedOut`). Corolário: re-render = volta ao estado neutro, sempre.
+- **Correlatos corrigidos na mesma auditoria:** (a) `loadList` sem guarda de concorrência →
+  login dispara `fetchAllAdmin` em dobro (handler do form + `onAuthChange`), com flicker e
+  risco de resposta velha sobrescrever a nova → adicionado flag `loading`; (b) `signOut` não
+  limpava `lista.innerHTML` → vazava a lista de testes para a próxima sessão no mesmo aparelho.
+- **Upgrade pendente (servidor):** `delete_teste` valida pelo e-mail do **JWT** (`auth.jwt()`),
+  não por lookup vivo em `auth.users` → remover um gestor da allowlist só vale após o token
+  expirar (até 1h). Para revogação imediata: `select 1 from auth.users where id=auth.uid()
+  and lower(email)=any(v_admins)`. Baixo impacto no cenário single-admin atual.
+
 ## 2026-06-23 — Área do gestor: exclusão na nuvem exige auth validada no servidor
 - **Necessidade:** gestores precisavam apagar testes preenchidos indevidamente. O "Remover" do BI
   só limpa histórico **local**; `anon` não tem DELETE (RLS) → não havia como excluir da nuvem.
