@@ -42,9 +42,15 @@ do $$ begin
   end if;
 end $$;
 
-create index if not exists testes_data_idx   on public.testes (data);
-create index if not exists testes_escola_idx  on public.testes (escola);
-create index if not exists testes_status_idx  on public.testes (status);
+-- Soft delete: a exclusão do gestor marca deleted_at em vez de apagar a linha.
+-- Reversível (restore_teste) e protege contra exclusão acidental. BI e leitura pública
+-- filtram deleted_at IS NULL. Migração idempotente para bancos já existentes.
+alter table public.testes add column if not exists deleted_at timestamptz;
+
+create index if not exists testes_data_idx     on public.testes (data);
+create index if not exists testes_escola_idx    on public.testes (escola);
+create index if not exists testes_status_idx    on public.testes (status);
+create index if not exists testes_deleted_idx   on public.testes (deleted_at);
 
 -- ---------- RLS: leitura pública, escrita bloqueada (só via RPC) ----------
 alter table public.testes enable row level security;
@@ -139,37 +145,74 @@ $$;
 -- anon (app público) só pode EXECUTAR a função de escrita e LER a tabela
 grant execute on function public.submit_teste(jsonb) to anon, authenticated;
 
--- ---------- RPC de exclusão (área do gestor, só autenticado + allowlist) ----------
+-- ---------- RPCs da área do gestor (só autenticado + allowlist) ----------
 -- O app é estático e a anon key é pública; por isso a exclusão é validada NO SERVIDOR:
 --   • exige sessão autenticada (Supabase Auth);
---   • exige que o e-mail esteja na allowlist abaixo (defesa em profundidade caso o
+--   • exige que o e-mail esteja na allowlist (defesa em profundidade caso o
 --     auto-cadastro do Supabase fique ligado por engano);
---   • a tabela não tem policy de DELETE para ninguém → só esta função SECURITY DEFINER apaga.
+--   • a tabela não tem policy de UPDATE/DELETE para ninguém → só estas funções
+--     SECURITY DEFINER alteram deleted_at.
 -- IMPORTANTE: troque o e-mail abaixo pelo da conta de gestor antes de rodar.
-create or replace function public.delete_teste(p_id text)
+
+-- Checagem central de gestor. Usa LOOKUP VIVO em auth.users (não o e-mail do JWT):
+-- assim, remover alguém da allowlist tem efeito IMEDIATO (com o JWT, valeria só após o
+-- token expirar, até ~1h). Lança exceção se não autenticado / não autorizado.
+create or replace function public.assert_test_admin()
 returns void
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
-  v_email  text   := lower(coalesce(auth.jwt() ->> 'email', ''));
   v_admins text[] := array['suape.alimentacao@gmail.com'];  -- e-mail(s) do(s) gestor(es)
+  v_email  text;
 begin
-  if auth.role() <> 'authenticated' or v_email = '' then
+  if auth.uid() is null then
     raise exception 'nao autenticado';
   end if;
-  if not (v_email = any(v_admins)) then
+  select lower(u.email) into v_email from auth.users u where u.id = auth.uid();
+  if v_email is null or not (v_email = any(v_admins)) then
     raise exception 'sem permissao';
   end if;
-  delete from public.testes where id = p_id;
 end;
 $$;
 
--- só a sessão autenticada pode executar (anon, NÃO)
-revoke all on function public.delete_teste(text) from public;
-revoke execute on function public.delete_teste(text) from anon;
-grant execute on function public.delete_teste(text) to authenticated;
+-- Exclusão = soft delete (reversível). Marca deleted_at; o BI e a leitura pública
+-- filtram deleted_at IS NULL, então some na hora para todas as escolas.
+create or replace function public.delete_teste(p_id text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform public.assert_test_admin();
+  update public.testes set deleted_at = now() where id = p_id;
+end;
+$$;
+
+-- Restauração: desfaz a exclusão (deleted_at = NULL). Mesma proteção.
+create or replace function public.restore_teste(p_id text)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  perform public.assert_test_admin();
+  update public.testes set deleted_at = null where id = p_id;
+end;
+$$;
+
+-- só a sessão autenticada pode executar (anon, NÃO).
+-- assert_test_admin é auxiliar interno → ninguém recebe execute direto.
+revoke all on function public.assert_test_admin()  from public;
+revoke all on function public.delete_teste(text)   from public;
+revoke all on function public.restore_teste(text)  from public;
+revoke execute on function public.delete_teste(text)  from anon;
+revoke execute on function public.restore_teste(text) from anon;
+grant  execute on function public.delete_teste(text)  to authenticated;
+grant  execute on function public.restore_teste(text) to authenticated;
 
 -- ---------- Health check para o keep-alive (mantém o projeto fora da pausa) ----------
 create or replace function public.keepalive()

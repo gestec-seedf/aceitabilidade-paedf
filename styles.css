@@ -388,6 +388,16 @@ main { max-width: 720px; margin: 0 auto; padding: .9rem .8rem 1.5rem; }
 /* botão de exclusão "armado" (área do gestor): 2º clique confirma */
 [data-del-cloud].is-armed { color: #fff; background: var(--red); border-color: var(--red); font-weight: 600; }
 
+/* área do gestor: barra de filtro/busca e botão de restaurar */
+.gestao-filtros { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .6rem; }
+.gestao-filtros input, .gestao-filtros select {
+  border: 1px solid var(--line); border-radius: 8px; padding: .45rem .6rem;
+  font-size: .95rem; background: var(--card); color: var(--text);
+}
+.gestao-filtros input { flex: 1 1 240px; }
+tr.is-deleted td { opacity: .55; }
+[data-restore-cloud] { color: var(--ok); border-color: var(--ok); }
+
 #turmasList { display: flex; flex-direction: column; gap: 1.2rem; margin-bottom: 1rem; }
 .turma {
   background: var(--card); border: 1px solid var(--line);

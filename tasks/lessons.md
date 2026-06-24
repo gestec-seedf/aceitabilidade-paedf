@@ -101,10 +101,20 @@
   login dispara `fetchAllAdmin` em dobro (handler do form + `onAuthChange`), com flicker e
   risco de resposta velha sobrescrever a nova → adicionado flag `loading`; (b) `signOut` não
   limpava `lista.innerHTML` → vazava a lista de testes para a próxima sessão no mesmo aparelho.
-- **Upgrade pendente (servidor):** `delete_teste` valida pelo e-mail do **JWT** (`auth.jwt()`),
-  não por lookup vivo em `auth.users` → remover um gestor da allowlist só vale após o token
-  expirar (até 1h). Para revogação imediata: `select 1 from auth.users where id=auth.uid()
-  and lower(email)=any(v_admins)`. Baixo impacto no cenário single-admin atual.
+- **Upgrade aplicado (servidor):** trocado o check por e-mail do **JWT** (`auth.jwt()`) por
+  **lookup vivo** em `auth.users` (`assert_test_admin()`: `select lower(email) ... where
+  id=auth.uid()`) → remover um gestor da allowlist vale **na hora** (antes só após o token
+  expirar, até 1h). Validado em Postgres real (Docker): anon→`nao autenticado`,
+  fora-da-allowlist→`sem permissao`, gestor→OK.
+- **Upgrade aplicado (dados):** exclusão virou **soft delete** (coluna `deleted_at` +
+  `restore_teste`), reversível. BI/leitura pública filtram `deleted_at is null`. O frontend
+  usa **fallback**: se a coluna ainda não existe no banco (42703), `fetchRemote` repete sem o
+  filtro → deploy do frontend não quebra o BI antes da migração. Ainda assim, rodar o
+  `schema.sql` ANTES do push é o certo (lição 2026-06-19): enquanto não roda, "Excluir" ainda
+  é definitivo e a UI promete restauração que não existe — janela de mensagem enganosa.
+- **Upgrade aplicado (UX):** lista do gestor com filtro de texto (insensível a acento via
+  `normalize('NFD')`) + situação e paginação incremental ("Carregar mais", PAGE=40). Lógica de
+  filtro coberta por asserts em Node.
 
 ## 2026-06-23 — Área do gestor: exclusão na nuvem exige auth validada no servidor
 - **Necessidade:** gestores precisavam apagar testes preenchidos indevidamente. O "Remover" do BI

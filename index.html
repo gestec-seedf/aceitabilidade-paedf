@@ -643,6 +643,16 @@
           <button type="button" class="btn btn--ghost btn--small" id="gestaoAtualizar">↻ Atualizar</button>
           <button type="button" class="btn btn--ghost btn--small" id="gestaoSair">Sair</button>
         </div>
+        <div class="gestao-filtros">
+          <input type="search" id="gestaoFiltro" aria-label="Filtrar testes por escola, preparação, aplicador ou data" placeholder="Filtrar por escola, preparação, aplicador ou data…" autocomplete="off" />
+          <select id="gestaoStatus" aria-label="Filtrar por situação">
+            <option value="ativos">Ativos</option>
+            <option value="final">Finalizados</option>
+            <option value="rascunho">Rascunhos</option>
+            <option value="excluido">Excluídos</option>
+            <option value="todos">Todos</option>
+          </select>
+        </div>
         <div id="gestaoLista" class="result"></div>
         <div id="gestaoPanelMsg" class="meta" style="margin-top:.5rem; min-height:1rem"></div>
       </div>

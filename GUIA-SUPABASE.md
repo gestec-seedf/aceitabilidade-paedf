@@ -43,10 +43,13 @@ não por senha no app.
 ## Área do gestor (login + exclusão de testes indevidos)
 
 O app tem uma **Área do gestor** (link discreto no rodapé · `🔒 Área do gestor`) onde, **após
-login**, é possível ver todos os testes da nuvem e **excluí-los definitivamente** — para
-remover registros preenchidos por engano. A exclusão é validada **no servidor**: a função
-`delete_teste()` exige sessão autenticada **e** que o e-mail esteja numa allowlist. O papel
-`anon` (app público) **não** consegue excluir.
+login**, é possível ver todos os testes da nuvem, **filtrar/buscar** (por escola, preparação,
+aplicador, data ou situação) e **excluí-los** — para remover registros preenchidos por engano.
+A exclusão é **reversível** (*soft delete*: marca `deleted_at`, some do BI na hora, mas pode ser
+**restaurada** filtrando por "Excluídos" → **Restaurar**). Tudo é validado **no servidor**: as
+funções `delete_teste()`/`restore_teste()` exigem sessão autenticada **e** que o e-mail esteja
+numa allowlist (conferida por **lookup vivo** em `auth.users` → tirar alguém da lista vale na
+hora). O papel `anon` (app público) **não** consegue excluir nem restaurar.
 
 Para ativar (uma vez):
 
@@ -60,7 +63,14 @@ Para ativar (uma vez):
    com a anon key. (Mesmo que fique ligado, a allowlist da RPC ainda bloqueia quem não for gestor.)
 
 > Trocar a senha do gestor: Authentication → Users → o usuário → **Reset/Update password**.
-> Revogar acesso: remova o e-mail da allowlist no `schema.sql` (e rode de novo) e/ou apague o usuário.
+> Revogar acesso: remova o e-mail da allowlist no `schema.sql` e rode de novo — **efeito imediato**
+> (a checagem é por lookup vivo em `auth.users`, não pelo e-mail do token). Pode também apagar o usuário.
+
+> **Migração do soft delete (rodar uma vez):** a exclusão reversível depende da coluna
+> `deleted_at` e das funções `delete_teste`/`restore_teste`/`assert_test_admin`. Basta rodar o
+> `schema.sql` inteiro no **SQL Editor** (idempotente) — ele cria a coluna e troca as funções.
+> Enquanto não rodar, o BI continua funcionando (o app tem fallback), mas a exclusão ainda é a
+> antiga (definitiva) e o botão "Restaurar" não aparece.
 
 ## Como ver / exportar os dados
 

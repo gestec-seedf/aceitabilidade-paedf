@@ -94,17 +94,25 @@
       adesaoMedia: +r.adesao_media || 0,
       passou: !!r.passou,
       turmas: Array.isArray(r.turmas) ? r.turmas : [],
-      status: r.status || 'final'
+      status: r.status || 'final',
+      deletedAt: r.deleted_at || null
     };
   }
   // BI lê SÓ testes finalizados. Rascunhos (auto-save em edição) ficam na nuvem para não
   // se perder, mas não entram em rankings/tendências até o usuário clicar em "Salvar".
   async function fetchRemote() {
     if (!sb) throw new Error('Supabase não configurado.');
-    const { data, error } = await sb.from('testes').select('*')
-      .eq('status', 'final').order('saved_at', { ascending: true });
-    if (error) throw new Error(error.message);
-    return (data || []).map(rowToSnap);
+    // Filtra os soft-deleted. Se a coluna deleted_at ainda não existe no banco (migração
+    // do soft delete não rodada), o PostgREST devolve 42703 → repete sem o filtro, para o
+    // BI não quebrar antes da migração. Depois que o schema.sql rodar, o filtro passa a valer.
+    let res = await sb.from('testes').select('*')
+      .eq('status', 'final').is('deleted_at', null).order('saved_at', { ascending: true });
+    if (res.error && /deleted_at/i.test(res.error.message || '')) {
+      res = await sb.from('testes').select('*')
+        .eq('status', 'final').order('saved_at', { ascending: true });
+    }
+    if (res.error) throw new Error(res.error.message);
+    return (res.data || []).map(rowToSnap);
   }
 
   // ---------- área do gestor: auth + leitura completa + exclusão ----------
@@ -130,10 +138,16 @@
     if (error) throw new Error(error.message);
     return (data || []).map(rowToSnap);
   }
-  // Exclusão definitiva via RPC validada no servidor (auth + allowlist).
+  // Exclusão (soft delete) via RPC validada no servidor (auth + allowlist). Reversível.
   async function deleteTeste(id) {
     if (!sb) return { ok: false, error: 'Nuvem não configurada.' };
     const { error } = await sb.rpc('delete_teste', { p_id: id });
+    return error ? { ok: false, error: error.message } : { ok: true };
+  }
+  // Restaura um teste soft-deleted (desfaz a exclusão). Mesma validação no servidor.
+  async function restoreTeste(id) {
+    if (!sb) return { ok: false, error: 'Nuvem não configurada.' };
+    const { error } = await sb.rpc('restore_teste', { p_id: id });
     return error ? { ok: false, error: error.message } : { ok: true };
   }
 
@@ -207,7 +221,7 @@
     sendSnapshot, flush,
     fetchRemote, getActiveHistory, getMode: () => state.mode,
     // área do gestor
-    signIn, signOut, getUser, onAuthChange, fetchAllAdmin, deleteTeste
+    signIn, signOut, getUser, onAuthChange, fetchAllAdmin, deleteTeste, restoreTeste
   };
 
   // ---------- boot ----------
