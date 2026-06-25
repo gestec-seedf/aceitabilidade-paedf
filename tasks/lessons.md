@@ -157,6 +157,24 @@
   `normalize('NFD')`) + situação e paginação incremental ("Carregar mais", PAGE=40). Lógica de
   filtro coberta por asserts em Node.
 
+## 2026-06-25 — Exclusão do gestor não sumia no BI: dupla fonte (nuvem × histórico local)
+- **Sintoma:** gestor excluía um teste, mas ele continuava no painel de Inteligência.
+- **Diagnóstico (REST anon = caminho do BI):** a nuvem estava CORRETA — `status=eq.final&
+  deleted_at=is.null` retornava `[]`; todos os testes tinham `deleted_at` preenchido. Logo o
+  dado visível no BI vinha do **histórico LOCAL** (`localStorage`, `PAEReg.getHistory()`).
+- **Causa raiz:** o BI tem duas fontes (`getActiveHistory`): nuvem (modo 'nuvem') OU fallback
+  local. O gestor faz soft delete **só na nuvem**; a cópia local do aparelho que criou o teste
+  nunca é tocada. Em modo local (offline, pull falho, ou antes do 1º pull) os "excluídos"
+  reaparecem. Cross-device o gestor não alcança o `localStorage` dos outros aparelhos.
+- **Correção:** em `pullAndRender`, após `fetchRemote` OK, `reconcileLocalDeletions()` busca os
+  IDs com `deleted_at not null` (`fetchDeletedIds`) e os remove do histórico local via
+  `PAEReg.setHistory`. Propaga a exclusão para o BI de qualquer aparelho no próximo sync. **Só**
+  remove o que a nuvem marca como excluído — testes locais ausentes da nuvem (fila offline) ficam.
+- **Regra:** com dupla fonte de verdade (nuvem + cache local), uma exclusão central só "some"
+  de fato se houver **reconciliação do cache local no sync**. Filtrar a leitura remota não basta
+  enquanto existir fallback local que ressuscita o registro. Validar sempre comparando REST anon
+  (verdade da nuvem) com o que o app exibe; se divergir e a nuvem estiver limpa, o fantasma é local.
+
 ## 2026-06-23 — Área do gestor: exclusão na nuvem exige auth validada no servidor
 - **Necessidade:** gestores precisavam apagar testes preenchidos indevidamente. O "Remover" do BI
   só limpa histórico **local**; `anon` não tem DELETE (RLS) → não havia como excluir da nuvem.

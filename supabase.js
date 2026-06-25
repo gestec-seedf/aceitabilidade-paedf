@@ -115,6 +115,31 @@
     return (res.data || []).map(rowToSnap);
   }
 
+  // IDs dos testes excluídos (soft delete) na nuvem. Usado para reconciliar o histórico
+  // local: o gestor exclui só na nuvem, mas o BI tem fallback local (localStorage deste
+  // aparelho) que ainda guardaria o teste — fazendo o "excluído" reaparecer. Só lista os
+  // que a nuvem marca como excluídos (nunca testes locais ainda não enviados).
+  async function fetchDeletedIds() {
+    if (!sb) return [];
+    const { data, error } = await sb.from('testes').select('id').not('deleted_at', 'is', null);
+    if (error) return []; // coluna ausente (migração não rodada) ou erro → não reconcilia
+    return (data || []).map(r => String(r.id));
+  }
+
+  // Remove do histórico local os testes que a nuvem reporta como excluídos. Assim a
+  // exclusão do gestor propaga para o BI de qualquer aparelho no próximo sync — inclusive
+  // quando o BI cai no modo local. Testes locais ausentes da nuvem (ex.: fila offline) são
+  // preservados, pois não estão na lista de excluídos.
+  async function reconcileLocalDeletions() {
+    if (!window.PAEReg) return;
+    const deleted = await fetchDeletedIds();
+    if (!deleted.length) return;
+    const del = new Set(deleted);
+    const hist = window.PAEReg.getHistory();
+    const kept = hist.filter(h => !del.has(String(h && h.id)));
+    if (kept.length !== hist.length) window.PAEReg.setHistory(kept);
+  }
+
   // ---------- área do gestor: auth + leitura completa + exclusão ----------
   async function signIn(email, password) {
     if (!sb) return { ok: false, error: 'Nuvem não configurada.' };
@@ -165,6 +190,7 @@
     try {
       state.remote = await fetchRemote();
       state.mode = 'nuvem';
+      await reconcileLocalDeletions(); // limpa do local o que o gestor excluiu na nuvem
       refreshStatus();
     } catch (e) {
       showMsg('Não foi possível atualizar a nuvem: ' + e.message, 'err');
